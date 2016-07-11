@@ -19,11 +19,10 @@ app.get('/', function (req, res) {
 app.post('/contract/:userId/:userId2/:value', function (req, res) {
     res.format({
         'application/json': function(){
-            res.send({userId: req.param('userId'))
+            res.send({ userId: req.param('userId') })
         },
     });
     var contracts_db = db.collection('uly-dev');
-    data = 
     contracts_db.insert(data, function(err,result) {
         if(err) throw err;
         console.log(result);
