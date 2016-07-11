@@ -12,10 +12,8 @@ app.get('/', function (req, res) {
 });
 
 app.post('/contract', function (req, res) {
-    res.format({
-        'application/json': function(){
-            res.send({ 'userId': req.params.userId}) }
-    });
+    console.log(JSON.stringify(req.params));
+    res.json({ userId: req.params.userId});
 });
 
 MongoClient.connect(url, function(err, db) {
