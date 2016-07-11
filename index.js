@@ -25,12 +25,8 @@ app.post('/contract', function (req, res) {
         contracts_db.insert(data, function(err,result) {
             if(err) throw err;
             console.log(result);
-        }
-
         });
-
-
-        )
+    });
 });
 
 app.listen(port, function () {
