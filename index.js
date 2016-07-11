@@ -16,7 +16,7 @@ app.get('/', function (req, res) {
     res.send('Hello World!');
 });
 
-app.post('/contract/:userId/:userId2/:value', function (req, res) {
+app.post('/contract', function (req, res) {
     res.format({
         'application/json': function(){
             res.send({ userId: req.param('userId') })
