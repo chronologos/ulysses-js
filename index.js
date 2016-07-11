@@ -5,11 +5,6 @@ var port = process.env.PORT || 3000;
 if (process.env.NODE_ENV === 'production') {
     var url = process.env.MONGODB_URI;
 }
-MongoClient.connect(url, function(err, db) {
-    assert.equal(null, err);
-    console.log("Connected correctly to server.");
-    db.close();
-});
 
 var app = express();
 app.get('/', function (req, res) {
@@ -19,16 +14,23 @@ app.get('/', function (req, res) {
 app.post('/contract', function (req, res) {
     res.format({
         'application/json': function(){
-            res.send({ userId: req.param('userId') })
+            res.send({ 'userId': req.param('userId') })
         },
     });
-    var contracts_db = db.collection('uly-dev');
-    contracts_db.insert(data, function(err,result) {
-        if(err) throw err;
-        console.log(result);
-    }
 
-    )
+    MongoClient.connect(url, function(err, db) {
+        assert.equal(null, err);
+        console.log("Connected correctly to server.");
+        var contracts_db = db.collection('uly-dev');
+        contracts_db.insert(data, function(err,result) {
+            if(err) throw err;
+            console.log(result);
+        }
+
+        });
+
+
+        )
 });
 
 app.listen(port, function () {
