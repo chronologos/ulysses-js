@@ -27,7 +27,7 @@ app.post('/contract', urlencodedParser, function (req, res) {
     MongoClient.connect(url, function(err, db) {
         console.log("Connected correctly to server.");
         assert.equal(null, err);
-        data = { promiserId: req.body.promierId, promisedId: req.body.promisedId, contract: req.body.contract, value: req.body.value, expiry: req.body.expiry }
+        data = { promiserId: req.body.promiserId, promisedId: req.body.promisedId, contract: req.body.contract, value: req.body.value, expiry: req.body.expiry }
         var contracts_db = db.collection('uly-dev');
         contracts_db.insert(data, function(err,result) {
             if(err) throw err;
