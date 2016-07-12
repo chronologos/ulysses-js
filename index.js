@@ -1,4 +1,9 @@
 var express = require('express');
+var bodyParser = require('body-parser')
+app.use( bodyParser.json() );       // to support JSON-encoded bodies
+app.use(bodyParser.urlencoded({     // to support URL-encoded bodies
+  extended: true
+})); 
 var MongoClient = require('mongodb').MongoClient;
 var assert = require('assert');
 var port = process.env.PORT || 3000;
@@ -7,8 +12,8 @@ if (process.env.NODE_ENV === 'production') {
 }
 
 var app = express();
-app.use(express.json());       // to support JSON-encoded bodies
-app.use(express.urlencoded()); // to support URL-encoded bodies
+//app.use(express.json());       // to support JSON-encoded bodies
+//app.use(express.urlencoded()); // to support URL-encoded bodies
 app.get('/', function (req, res) {
     res.send('Hello World!');
 });
