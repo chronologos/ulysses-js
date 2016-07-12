@@ -13,6 +13,7 @@ app.get('/', function (req, res) {
 
 app.post('/contract', function (req, res) {
     console.log("contract")
+    console.log(req.params);
     console.log(JSON.stringify(req.params));
     res.json({ userId: req.params.userId});
 });
