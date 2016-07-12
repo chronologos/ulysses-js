@@ -7,15 +7,16 @@ if (process.env.NODE_ENV === 'production') {
 }
 
 var app = express();
+app.use(express.json());       // to support JSON-encoded bodies
+app.use(express.urlencoded()); // to support URL-encoded bodies
 app.get('/', function (req, res) {
     res.send('Hello World!');
 });
 
 app.post('/contract', function (req, res) {
     console.log("contract")
-    console.log(req.params);
-    console.log(JSON.stringify(req.params));
-    res.json({ userId: req.params.userId});
+    console.log(req.body.id);
+    res.json({ userId: req.body.id});
 });
 
 MongoClient.connect(url, function(err, db) {
