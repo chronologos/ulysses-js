@@ -9,17 +9,18 @@ if (process.env.NODE_ENV === 'production') {
 }
 
 var app = express();
-app.use(bodyParser.json());       // to support JSON-encoded bodies
-app.use(bodyParser.urlencoded({     // to support URL-encoded bodies
-    extended: true
-})); 
+var urlencodedParser = bodyParser.urlencoded({ extended: false })
+//app.use(bodyParser.json());       // to support JSON-encoded bodies
+//app.use(bodyParser.urlencoded({     // to support URL-encoded bodies
+    //extended: true
+//})); 
 //app.use(express.json());       // to support JSON-encoded bodies
 //app.use(express.urlencoded()); // to support URL-encoded bodies
 app.get('/', function (req, res) {
     res.send('Hello World!');
 });
 
-app.post('/contract', function (req, res) {
+app.post('/contract', urlencodedParser, function (req, res) {
     console.log("contract");
     console.log(req.body.id);
     res.json({ userId: req.body.id});
