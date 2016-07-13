@@ -19,7 +19,9 @@ var urlencodedParser = bodyParser.urlencoded({ extended: false });
 //app.use(express.json());       // to support JSON-encoded bodies
 //app.use(express.urlencoded()); // to support URL-encoded bodies
 app.get('/', function (req, res) {
-    res.render('index');
+    cons.jade('index.jade', function(err,html){
+        console.log(html);
+    });
 });
 
 app.post('/contract', urlencodedParser, function (req, res) {
