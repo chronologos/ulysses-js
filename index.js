@@ -1,6 +1,5 @@
 var express = require('express');
 var bodyParser = require('body-parser')
-var pug = require('pug');
 var MongoClient = require('mongodb').MongoClient;
 var assert = require('assert');
 var port = process.env.PORT || 3000;
@@ -18,8 +17,7 @@ var urlencodedParser = bodyParser.urlencoded({ extended: false });
 //app.use(express.json());       // to support JSON-encoded bodies
 //app.use(express.urlencoded()); // to support URL-encoded bodies
 app.get('/', function (req, res) {
-    var html = pug.renderFile('index.pug');
-    res.send(html);
+    res.render('index')
 });
 
 app.post('/contract', urlencodedParser, function (req, res) {
