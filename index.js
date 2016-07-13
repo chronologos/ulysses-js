@@ -30,10 +30,13 @@ app.get('/', function (req, res) {
 });
 
 app.get('/contract/:promiserId/:promisedId/:contract/:value/:expiry', function(req,res){
+    console.log(req.params)
     MongoClient.connect(url, function(err,db) {
         data = { promiserId: req.body.promiserId, promisedId: req.body.promisedId, contract: req.body.contract, value: req.body.value, expiry: req.body.expiry }
+        console.log(data)
         var contracts_db = db.collection('uly-dev');
         contracts_db.find(data, function(err, result){
+            res.send(result)
             if (err) throw err;
             console.log(result);
             db.close()
