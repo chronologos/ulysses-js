@@ -18,7 +18,8 @@ var urlencodedParser = bodyParser.urlencoded({ extended: false });
 //app.use(express.json());       // to support JSON-encoded bodies
 //app.use(express.urlencoded()); // to support URL-encoded bodies
 app.get('/', function (req, res) {
-    pug.renderFile('index.pug')
+    var html = pug.renderFile('index.pug');
+    res.send(html);
 });
 
 app.post('/contract', urlencodedParser, function (req, res) {
