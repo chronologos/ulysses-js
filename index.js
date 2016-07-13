@@ -9,7 +9,8 @@ if (process.env.NODE_ENV === 'production') {
 }
 
 var app = express();
-app.engine('html',swig)
+app.engine('html',swig.renderFile);
+app.set('view engine', 'html'); //todo(iantay) what is this
 var urlencodedParser = bodyParser.urlencoded({ extended: false });
 //app.use(bodyParser.json());       // to support JSON-encoded bodies
 //app.use(bodyParser.urlencoded({     // to support URL-encoded bodies
