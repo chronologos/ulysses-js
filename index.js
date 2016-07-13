@@ -9,10 +9,10 @@ if (process.env.NODE_ENV === 'production') {
 }
 
 var app = express();
-var urlencodedParser = bodyParser.urlencoded({ extended: false })
+var urlencodedParser = bodyParser.urlencoded({ extended: false });
 //app.use(bodyParser.json());       // to support JSON-encoded bodies
 //app.use(bodyParser.urlencoded({     // to support URL-encoded bodies
-    //extended: true
+//extended: true
 //})); 
 //app.use(express.json());       // to support JSON-encoded bodies
 //app.use(express.urlencoded()); // to support URL-encoded bodies
