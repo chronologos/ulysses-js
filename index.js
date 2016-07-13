@@ -1,6 +1,6 @@
 var express = require('express');
 var bodyParser = require('body-parser')
-
+var cons = require('consolidate');
 var MongoClient = require('mongodb').MongoClient;
 var assert = require('assert');
 var port = process.env.PORT || 3000;
@@ -9,6 +9,8 @@ if (process.env.NODE_ENV === 'production') {
 }
 
 var app = express();
+app.engine('jade',cons.jade)
+
 var urlencodedParser = bodyParser.urlencoded({ extended: false });
 //app.use(bodyParser.json());       // to support JSON-encoded bodies
 //app.use(bodyParser.urlencoded({     // to support URL-encoded bodies
@@ -17,7 +19,7 @@ var urlencodedParser = bodyParser.urlencoded({ extended: false });
 //app.use(express.json());       // to support JSON-encoded bodies
 //app.use(express.urlencoded()); // to support URL-encoded bodies
 app.get('/', function (req, res) {
-    res.send('Hello World!');
+    res.render('index');
 });
 
 app.post('/contract', urlencodedParser, function (req, res) {
