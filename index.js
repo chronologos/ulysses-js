@@ -7,10 +7,13 @@ var port = process.env.PORT || 3000;
 if (process.env.NODE_ENV === 'production') {
     var url = process.env.MONGODB_URI;
 }
-
+swig.setDefaults({
+   varControls: ['[[', ']]'] 
+});
 var app = express();
 app.engine('html',swig.renderFile);
 app.set('view engine', 'html'); //todo(iantay) what is this
+app.use(express.static('public')); //serve js and css
 var urlencodedParser = bodyParser.urlencoded({ extended: false });
 //app.use(bodyParser.json());       // to support JSON-encoded bodies
 //app.use(bodyParser.urlencoded({     // to support URL-encoded bodies
@@ -19,7 +22,7 @@ var urlencodedParser = bodyParser.urlencoded({ extended: false });
 //app.use(express.json());       // to support JSON-encoded bodies
 //app.use(express.urlencoded()); // to support URL-encoded bodies
 app.get('/', function (req, res) {
-    swig.renderfile('index.html',{
+    res.render('index.html',{
         pagename: 'awesome people',
         authors: ['Paul', 'Jim', 'Jane']
     });
