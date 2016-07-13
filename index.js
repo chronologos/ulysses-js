@@ -9,7 +9,7 @@ if (process.env.NODE_ENV === 'production') {
 }
 
 var app = express();
-app.engine('jade',cons.jade)
+app.engine('jade', cons.pug)
 
 var urlencodedParser = bodyParser.urlencoded({ extended: false });
 //app.use(bodyParser.json());       // to support JSON-encoded bodies
@@ -19,7 +19,7 @@ var urlencodedParser = bodyParser.urlencoded({ extended: false });
 //app.use(express.json());       // to support JSON-encoded bodies
 //app.use(express.urlencoded()); // to support URL-encoded bodies
 app.get('/', function (req, res) {
-    cons.jade('index.jade', function(err,html){
+    cons.pug('index.jade', function(err,html){
         console.log(html);
     });
 });
