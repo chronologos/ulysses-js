@@ -6,6 +6,7 @@
     </head>
     <body>
         <h1>[[ pagename|title ]]</h1>
+        <h2>Retrieve Contract</h2>
         <form action="/contract" method="get">
             <div>
                 <label for="contract">Contract</label>
@@ -15,6 +16,35 @@
                 <button type="submit">Send your message</button>
             </div>
         </form>
+
+        <h2>Submit Contract</h2>
+        <form action="/submit_contract" method="post">
+            <div>
+                <label for="promiser">promiserId</label>
+                <input type="text" id="promiser" name="promiserId" />
+            </div>
+            <div>
+                <label for="promiser">promisedId</label>
+                <input type="text" id="promised" name="promisedId" />
+            </div>
+            <div>
+                <label for="contract">contract</label>
+                <input type="text" id="contract" name="contract" />
+            </div>
+            <div>
+                <label for="value">value</label>
+                <input type="text" id="value" name="value" />
+            </div>
+            <div>
+                <label for="expiry">expiry</label>
+                <input type="text" id="expiry" name="expiry" />
+            </div>
+            <div class="button">
+                <button type="submit">Send your message</button>
+            </div>
+        </form>
+        <div id="app">
+
         <div id="app">
             {{ message }}
         </div>

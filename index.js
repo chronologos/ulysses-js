@@ -34,18 +34,18 @@ app.get('/', function (req, res) {
         });
 });
 
-app.get('/contract', function(req,res){
+app.get('/contract/:contract', function(req,res){
     console.log(req.params)
         MongoClient.connect(url, function(err,db) {
             //data = { promiserId: req.body.promiserId, promisedId: req.body.promisedId, contract: req.body.contract, value: req.body.value, expiry: req.body.expiry }
-            data = {contract: req.query.contract}
+            data = {contract: req.params.contract}
             console.log(data)
                 var contracts_db = db.collection('uly-dev');
             contracts_db.find(data).toArray(function(err, result){
                 if (err) throw err;
                 console.log(result);
                 db.close()
-                    res.send(result)
+                    res.send(result) //todo use this to send redirect with string.
             });
         });
 });
@@ -53,8 +53,8 @@ app.get('/contract', function(req,res){
 
 app.post('/submit_contract', urlencodedParser, function (req, res) {
     console.log("contract");
-    console.log(req.body.id);
-    res.json({ userId: req.body.id});
+    data = { promiserId: req.body.promiserId, promisedId: req.body.promisedId, contract: req.body.contract, value: req.body.value, expiry: req.body.expiry }
+    console.log(data);
     MongoClient.connect(url, function(err, db) {
         console.log("Connected correctly to server.");
         assert.equal(null, err);
@@ -65,6 +65,7 @@ app.post('/submit_contract', urlencodedParser, function (req, res) {
             console.log(result);
         });
         db.close()
+            res.status(200).end()
     });
 });
 
