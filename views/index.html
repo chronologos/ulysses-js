@@ -5,16 +5,25 @@
         <script type="text/javascript" src="app.js" defer></script>
     </head>
     <body>
-    <h1>[[ pagename|title ]]</h1>
-    <div id="app">
-        {{ message }}
-    </div>
-    <ul>
-        {% for author in authors %}
-        <li{% if loop.first %} class="first"{% endif %}>
-            [[ author ]]
-        </li>
-        {% endfor %}
-    </ul>
+        <h1>[[ pagename|title ]]</h1>
+        <form action="/contract" method="get">
+            <div>
+                <label for="contract">Contract</label>
+                <input type="text" id="contract" name="contract" />
+            </div>
+            <div class="button">
+                <button type="submit">Send your message</button>
+            </div>
+        </form>
+        <div id="app">
+            {{ message }}
+        </div>
+        <ul>
+            {% for author in authors %}
+            <li{% if loop.first %} class="first"{% endif %}>
+                [[ author ]]
+            </li>
+            {% endfor %}
+        </ul>
     </body>
 </html>

@@ -8,6 +8,10 @@ var port = process.env.PORT || 3000;
 if (process.env.NODE_ENV === 'production') {
     var url = process.env.MONGODB_URI;
 }
+else {
+    var url =  'mongodb://heroku_t776fjt0:q7iffsa51r7hd5lbev3ukmg021@ds027308.mlab.com:27308/heroku_t776fjt0'
+}
+
 swig.setDefaults({
     varControls: ['[[', ']]'] 
 });
@@ -23,25 +27,27 @@ var urlencodedParser = bodyParser.urlencoded({ extended: false });
 //app.use(express.json());       // to support JSON-encoded bodies
 //app.use(express.urlencoded()); // to support URL-encoded bodies
 app.get('/', function (req, res) {
-    res.render('index.html',{
-        pagename: 'awesome people',
-        authors: ['Paul', 'Jim', 'Jane']
-    });
+    console.log('index')
+        res.render('index.html',{
+            pagename: 'awesome people',
+            authors: ['Paul', 'Jim', 'Jane']
+        });
 });
 
-app.get('/contract/:promiserId/:promisedId/:contract/:value/:expiry', function(req,res){
+app.get('/contract', function(req,res){
     console.log(req.params)
-    MongoClient.connect(url, function(err,db) {
-        data = { promiserId: req.body.promiserId, promisedId: req.body.promisedId, contract: req.body.contract, value: req.body.value, expiry: req.body.expiry }
-        console.log(data)
-        var contracts_db = db.collection('uly-dev');
-        contracts_db.find(data, function(err, result){
-            res.send(result)
-            if (err) throw err;
-            console.log(result);
-            db.close()
+        MongoClient.connect(url, function(err,db) {
+            //data = { promiserId: req.body.promiserId, promisedId: req.body.promisedId, contract: req.body.contract, value: req.body.value, expiry: req.body.expiry }
+            data = {contract: req.query.contract}
+            console.log(data)
+                var contracts_db = db.collection('uly-dev');
+            contracts_db.find(data).toArray(function(err, result){
+                if (err) throw err;
+                console.log(result);
+                db.close()
+                    res.send(result)
+            });
         });
-    });
 });
 
 
