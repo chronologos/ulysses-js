@@ -44,7 +44,11 @@ app.get('/contract/:contract', function(req, res) {
     var ContractsDb = db.collection('uly-dev');
     ContractsDb.find(data).toArray(function(err, result) {
       if (err) throw err;
-      console.log(result);
+      if (result) {
+        console.log(result);
+      } else {
+        console.log("not found")
+      }
       db.close();
       res.send(result); // todo use this to send redirect with string.
     });
