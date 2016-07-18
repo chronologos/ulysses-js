@@ -2,7 +2,47 @@ var express = require('express');
 var swig = require('swig');
 var bodyParser = require('body-parser');
 var MongoClient = require('mongodb').MongoClient;
-var assert = require('assert');
+vav assert = require('assert');
+var session = require('express-session');
+var Grant = require('grant-express');
+
+var grantConfig = {
+  'development':{
+    'server': {
+      'protocol':'http',
+      'host': 'localhost:3000',
+      'callback': //TODO
+      'transport': 'session',
+      'state': false //???
+
+    },
+    'facebook':{//TODO
+      'key': '',
+      'secret':''
+    },
+  },
+  'production':{
+    'server':{
+      'protocol':'https',
+      'host': 'ulysses-contracts.herokuapp.com',
+      'callback': 'https://ulysses-contracts.herokuapp.com/connect/facebook/callback', //TODO correct?
+      'transport': 'session',
+      'state': false
+
+    },
+    'facebook':{//TODO
+      'key': '',
+      'secret':''
+    },
+  }
+
+}
+var grant = new Grant(grantConfig)
+var app = express()
+// REQUIRED: (any session store - see ./examples/express-session)
+app.use(session({secret: 'grant'}))
+// mount grant
+app.use(grant)
 
 var port = process.env.PORT || 3000;
 var url;
@@ -15,7 +55,6 @@ if (process.env.NODE_ENV === 'production') {
 swig.setDefaults({
   varControls: ['[[', ']]']
 });
-var app = express();
 app.engine('html', swig.renderFile);
 app.set('view engine', 'html'); // TODO(iantay) what is this
 app.use(express.static('public')); // serve js and css
