@@ -10,9 +10,6 @@ var MongoClient = mongoDB.MongoClient;
 var ObjectId = mongoDB.ObjectID;
 var assert = require('assert');
 var session = require('express-session'); // for grant
-var Grant = require('grant-express');  // for oauth2 login with facebook
-var grantconfig = require('./grantconfig.json');
-var grant = new Grant(grantconfig[process.env.NODE_ENV] || 'development');
 var _ = require('lodash');
 var app = express();
 
@@ -24,17 +21,34 @@ var accessLogStream = fs.createWriteStream(
 // setup the logger
 app.use(morgan('combined', {stream: accessLogStream}));
 
-app.use(session({secret: 'grant'}));
-// mount grant
-app.use(grant);
+var passport = require('passport')
+  , FacebookStrategy = require('passport-facebook').Strategy;
+
+passport.use(new FacebookStrategy({
+    clientID: process.env.FACEBOOK_APP_ID,
+    clientSecret: process.env.FACEBOOK_APP_SECRET,
+    callbackURL: process.env.FB_CALLBACK_URL
+  },
+  function(accessToken, refreshToken, profile, done) {
+    console.log(accessToken)
+    console.log(refreshToken)
+    console.log(profile)
+    //User.findOrCreate(..., function(err, user) {
+      //if (err) { return done(err); }
+      //done(null, user);
+    //});
+  }
+));
+
+
 
 var port = process.env.PORT || 3000;
 var url;
 if (process.env.NODE_ENV === 'production') {
   url = process.env.MONGODB_URI;
 } else {
-  // url = 'mongodb://heroku_t776fjt0:q7iffsa51r7hd5lbev3ukmg021@ds027308.mlab.com:27308/heroku_t776fjt0';
-  url = 'mongodb://127.0.0.1:27017';
+   url = 'mongodb://heroku_t776fjt0:q7iffsa51r7hd5lbev3ukmg021@ds027308.mlab.com:27308/heroku_t776fjt0';
+  //url = 'mongodb://127.0.0.1:27017';
 }
 
 swig.setDefaults({
@@ -62,6 +76,9 @@ app.get('/', function(req, res) {
   });
 });
 
+
+app.get('/auth/facebook', passport.authenticate('facebook'));
+
 app.get('/contract/:contract', function(req, res) {
   console.log(req.params);
   MongoClient.connect(url, function(err, db) {
@@ -83,7 +100,7 @@ app.get('/contract/:contract', function(req, res) {
   });
 });
 
-app.get('/connect/facebook/callback', function(req, res) {
+app.get('/auth/facebook/callback', function(req, res) {
   console.log('ok');
   console.log(req.query);
   //res.end(JSON.stringify(req.query, null, 2))
