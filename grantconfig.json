@@ -1,0 +1,36 @@
+{
+  "development":{
+    "server": {
+      "protocol":"http",
+      "host": "ulysses-contracts.herokuapp.com:3000",
+      "transport": "session",
+      "state": false
+
+    },
+    "facebook":{
+      "key": "493303700876241",
+      "secret":"f22d8ddb99b5f276a6f1e872b2909637",
+      "callback": "https://www.facebook.com/connect/login_success.html",
+      "custom_params": {"authorize_url": "https://www.facebook.com/dialog/oauth",
+        "access_url": "https://graph.facebook.com/oauth/access_token",
+        "oauth": 2}
+    }
+  },
+  "production":{
+    "server":{
+      "protocol":"http",
+      "host": "ulysses-contracts.herokuapp.com:3000",
+      "transport": "session",
+      "state": false
+
+    },
+    "facebook":{
+      "key": "493303700876241",
+      "secret":"f22d8ddb99b5f276a6f1e872b2909637",
+      "callback": "https://www.facebook.com/connect/login_success.html",
+      "custom_params": {"authorize_url": "https://www.facebook.com/dialog/oauth",
+        "access_url": "https://graph.facebook.com/oauth/access_token",
+        "oauth": 2}
+    } 
+  }
+}

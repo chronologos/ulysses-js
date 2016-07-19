@@ -1,45 +1,25 @@
 var express = require('express');
-var swig = require('swig');
-var bodyParser = require('body-parser');
+var fs = require('fs');
+var path = require('path');
+var morgan = require('morgan'); // logger
+var swig = require('swig'); // templating engine
+require('dotenv').config(); // allow envvars to be stored in files
+var bodyParser = require('body-parser'); // for post request req.body
 var MongoClient = require('mongodb').MongoClient;
-vav assert = require('assert');
-var session = require('express-session');
-var Grant = require('grant-express');
-
-var grantConfig = {
-  'development':{
-    'server': {
-      'protocol':'http',
-      'host': 'localhost:3000',
-      'callback': //TODO
-      'transport': 'session',
-      'state': false //???
-
-    },
-    'facebook':{//TODO
-      'key': '',
-      'secret':''
-    },
-  },
-  'production':{
-    'server':{
-      'protocol':'https',
-      'host': 'ulysses-contracts.herokuapp.com',
-      'callback': 'https://ulysses-contracts.herokuapp.com/connect/facebook/callback', //TODO correct?
-      'transport': 'session',
-      'state': false
-
-    },
-    'facebook':{//TODO
-      'key': '',
-      'secret':''
-    },
-  }
-
-}
-var grant = new Grant(grantConfig)
+var assert = require('assert');
+var session = require('express-session'); // for grant
+var Grant = require('grant-express');  // for oauth2 login with facebook
+var grantconfig = require('./grantconfig.json')
+var grant = new Grant(grantconfig[process.env.NODE_ENV] || 'development')
 var app = express()
-// REQUIRED: (any session store - see ./examples/express-session)
+
+// Do logging with morgan
+// ========================
+// create a write stream (in append mode)
+var accessLogStream = fs.createWriteStream(path.join(__dirname, 'access.log'), {flags: 'a'})
+// setup the logger
+app.use(morgan('combined', {stream: accessLogStream}))
+
 app.use(session({secret: 'grant'}))
 // mount grant
 app.use(grant)
@@ -94,6 +74,12 @@ app.get('/contract/:contract', function(req, res) {
   });
 });
 
+app.get('/connect/facebook/callback', function(req, res) {
+  console.log('ok')
+  console.log(req.query)
+  //res.end(JSON.stringify(req.query, null, 2))
+})
+
 app.post('/submit_contract', urlencodedParser, function(req, res) {
   console.log("contract");
   var data = {promiserId: req.body.promiserId,
@@ -125,4 +111,5 @@ app.post('/submit_contract', urlencodedParser, function(req, res) {
 
 app.listen(port, function() {
   console.log('Example app listening on port 3000!');
+  console.log(process.env.NODE_ENV);
 });
