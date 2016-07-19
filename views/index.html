@@ -5,6 +5,11 @@
         <script type="text/javascript" src="app.js" defer></script>
     </head>
     <body>
+      <fb:login-button scope="public_profile,email" onlogin="checkLoginState();">
+      </fb:login-button>
+
+      <div id="status">
+      </div>
         <h1>[[ pagename|title ]]</h1>
         <h2>Retrieve Contract</h2>
         <form action="/contract" method="get">
