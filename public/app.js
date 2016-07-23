@@ -39,7 +39,7 @@ function checkLoginState() {
 
 window.fbAsyncInit = function() {
   FB.init({
-    appId      : '493303700876241',
+    appId      : '1703052213289749',
     cookie     : true,  // enable cookies to allow the server to access 
     // the session
     xfbml      : true,  // parse social plugins on this page
@@ -79,7 +79,20 @@ function testAPI() {
   console.log('Welcome!  Fetching your information.... ');
   FB.api('/me', function(response) {
     console.log('Successful login for: ' + response.name);
+    console.log('Response data: ' + JSON.stringify(response));
     document.getElementById('status').innerHTML =
       'Thanks for logging in, ' + response.name + '!';
+      $.ajax({
+        url: '/auth/facebook/callback',
+        data: response,
+        success: function(dat, status, jqXHR) {
+          console.log("Sent FB data to server");
+        },
+        error: function(jqXHR, status, error) {
+          console.log("Error sending FB data to server");
+          console.log(status);
+          console.log(error);
+        }
+      });
   });
 }

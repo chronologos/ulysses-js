@@ -21,18 +21,21 @@ var accessLogStream = fs.createWriteStream(
 // setup the logger
 app.use(morgan('combined', {stream: accessLogStream}));
 
+console.log('Client ID is ' + process.env.FACEBOOK_APP_ID);
+
 var passport = require('passport')
   , FacebookStrategy = require('passport-facebook').Strategy;
 
 passport.use(new FacebookStrategy({
+
     clientID: process.env.FACEBOOK_APP_ID,
     clientSecret: process.env.FACEBOOK_APP_SECRET,
     callbackURL: process.env.FB_CALLBACK_URL
   },
   function(accessToken, refreshToken, profile, done) {
-    console.log(accessToken)
-    console.log(refreshToken)
-    console.log(profile)
+    console.log(accessToken);
+    console.log(refreshToken);
+    console.log(profile);
     //User.findOrCreate(..., function(err, user) {
       //if (err) { return done(err); }
       //done(null, user);
@@ -47,8 +50,8 @@ var url;
 if (process.env.NODE_ENV === 'production') {
   url = process.env.MONGODB_URI;
 } else {
-   url = 'mongodb://heroku_t776fjt0:q7iffsa51r7hd5lbev3ukmg021@ds027308.mlab.com:27308/heroku_t776fjt0';
-  //url = 'mongodb://127.0.0.1:27017';
+   //url = 'mongodb://heroku_t776fjt0:q7iffsa51r7hd5lbev3ukmg021@ds027308.mlab.com:27308/heroku_t776fjt0';
+  url = 'mongodb://127.0.0.1:27017';
 }
 
 swig.setDefaults({
@@ -65,6 +68,7 @@ var INTERVAL = 3000;
 var zombies = {};
 
 // Start-off watchdog
+console.log("Watchdog connecting to DB");
 checkExpiry();
 
 app.get('/', function(req, res) {
@@ -101,11 +105,15 @@ app.get('/contract/:contract', function(req, res) {
 });
 
 app.get('/auth/facebook/callback', function(req, res) {
-  console.log('ok');
+  console.log("Received FB data from client");
   console.log(req.query);
+  var userID = req.query.id; // id returned by facebook will be primary key for user in DB
   //res.end(JSON.stringify(req.query, null, 2))
-})
+  console.log("Redirecting logged-in user to his homepage"); 
+  res.redirect('/' + userID);
+});
 
+// should change to use req.userID using sessions OR by saving userID on client side after call to FB API and making button post to /:id/submit_contract
 app.post('/submit_contract', urlencodedParser, function(req, res) {
   console.log("contract");
   var data = {promiserId: req.body.promiserId,
@@ -146,7 +154,8 @@ app.post('/submit_contract', urlencodedParser, function(req, res) {
 });
 
 // TEMP - Replace with authentication module
-app.get('/:user', function(req, res) {
+app.get('/:user', function(req, res) { // Need sessions support to ensure that id was not directly entered by non-logged in user
+  console.log("User ID is " + req.params.user);
   MongoClient.connect(url, function(err, db) {
     if (err) {
       res.status(501).end('Please try again in a short while');
@@ -197,7 +206,7 @@ function saveContractToUser(db, contract, user) {
     console.log(result);
     contractID = result['insertedIds'][0];
     console.log("ContractID is " + contractID);
-    usersDB.update({'userName':user}, {'$push':{'contracts':contractID}}, {'upsert' : true}, function(error, res) {
+    usersDB.update({'userID':user}, {'$push':{'contracts':contractID}}, {'upsert' : true}, function(error, res) {
       if (error) throw error;
       console.log("Successfully appended " + contractID + " to user " + user);
       console.log(res);
@@ -212,11 +221,11 @@ app.listen(port, function() {
 })
 
 
-function retrieveUserContracts(db, userName, next) {
+function retrieveUserContracts(db, userID, next) {
   var usersDB = db.collection('users');
   var contractsDB = db.collection('contracts');
   // Try and replace with more efficient query that only retrieves the contracts field
-  usersDB.find({'userName':userName}, {fields:{'contracts':1}}, function(error , result) {
+  usersDB.find({'userID':userID}, {fields:{'contracts':1}}, function(error , result) {
     if (!error) {
       result.limit(1).toArray().then(function(docs, err) { // Assumed that user identifier will be unique, but limit 1 just in case
         if (err) next(err, docs);
@@ -258,16 +267,20 @@ function getContracts(contractsDB, idsList, next) {
 function checkExpiry() {
   // Loop through contracts in db
   MongoClient.connect(url, function(err, db) {
-    console.log("Watchdog connecting to DB");
+  	if (err) throw err;
+    //console.log("Watchdog connecting to DB");
     var contractsDB = db.collection('contracts');
     contractsDB.find().toArray().then(function(docs, error) {
       if (error) {
         console.log("Watchdog unable to retrieve contracts");
         throw err;
       }
-      console.log(docs);
+      //console.log(docs);
       var timeNow = new Date();
       var expiry;
+      
+      //console.log("Number of documents retrieved: " + docs.length);
+
       docs.forEach(function(doc, index) {
         // Check expiry time against current time
         expiry = new Date(doc['expiry']);
@@ -279,14 +292,19 @@ function checkExpiry() {
           }
           _.set(zombies, doc['promiserId'], oldList);
           oldList = _.get(zombies, doc['promisedId'], []);
+          
           if (!hasContract(oldList, doc)) {
             oldList.push(doc);
           } 
           _.set(zombies, doc['promisedId'], oldList); 
         }
       });
-      console.log(JSON.stringify(zombies));
-      console.log("\n\n");
+      //console.log(JSON.stringify(zombies));
+      //console.log("\n\n");
+      if (Object.keys(zombies).length > 0) {
+      	console.log(JSON.stringify(zombies));
+      	console.log("\n\n");
+      }
       db.close();
     });
 
