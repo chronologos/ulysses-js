@@ -21,6 +21,13 @@ var accessLogStream = fs.createWriteStream(
 // setup the logger
 app.use(morgan('combined', {stream: accessLogStream}));
 
+app.use(session({ secret: process.env.FACEBOOK_APP_SECRET, cookie: { maxAge: 60000 }, resave: false, saveUninitialized: false}));
+
+if (app.get('env') === 'production') {
+  app.set('trust proxy', 1) // trust first proxy 
+  sess.cookie.secure = true // serve secure cookies 
+}
+
 console.log('Client ID is ' + process.env.FACEBOOK_APP_ID);
 
 var passport = require('passport')
@@ -36,10 +43,6 @@ passport.use(new FacebookStrategy({
     console.log(accessToken);
     console.log(refreshToken);
     console.log(profile);
-    //User.findOrCreate(..., function(err, user) {
-      //if (err) { return done(err); }
-      //done(null, user);
-    //});
   }
 ));
 
@@ -109,12 +112,34 @@ app.get('/auth/facebook/callback', function(req, res) {
   console.log(req.query);
   var userID = req.query.id; // id returned by facebook will be primary key for user in DB
   //res.end(JSON.stringify(req.query, null, 2))
+  if (req.session) {
+    req.session.userID = userID;
+    console.log("Saved userID to session");
+  }
+  else {
+    console.log("Session was not created");
+    res.redirect('/');
+  }
   console.log("Redirecting logged-in user to his homepage"); 
   res.redirect('/' + userID);
 });
 
 // should change to use req.userID using sessions OR by saving userID on client side after call to FB API and making button post to /:id/submit_contract
 app.post('/submit_contract', urlencodedParser, function(req, res) {
+  if (req.session) {
+    console.log("Session object is " + JSON.stringify(req.session));
+    console.log("Session userID is " + req.session.userID);
+    //if (req.session.userID != req.params.user) {
+    //  console.log("Security alert! Session userID does not match URL params userID, redirecting");
+    //  res.redirect('/');
+    //}
+  }
+  else {
+    console.log("No session ID found, redirecting user to login page");
+    res.status(401).redirect('/');
+  }
+
+
   console.log("contract");
   var data = {promiserId: req.body.promiserId,
     promisedId: req.body.promisedId,
@@ -126,36 +151,29 @@ app.post('/submit_contract', urlencodedParser, function(req, res) {
   MongoClient.connect(url, function(err, db) {
     console.log("Connected correctly to server.");
     assert.equal(null, err);
-    /*
-       data = {
-       promiserId: req.body.promiserId,
-       promisedId: req.body.promisedId,
-       contract: req.body.contract,
-       value: req.body.value,
-       expiry: req.body.expiry
-       };
-       */
-
-    //var contractsDB = db.collection('uly-dev');
-    /*
-       ContractsDb.insert(data, function(err, result) {
-       if (err) throw err;
-       console.log(result);
-       });
-       db.close();
-       */
-
-    // TEMP!
-    var user = req.body.promiserId;
+    //var user = req.body.promiserId;
+    var user = req.session.userID;
     //var usersDB = db.collection('users');
     saveContractToUser(db, data, user);
   });
   res.status(200).end();
 });
 
-// TEMP - Replace with authentication module
 app.get('/:user', function(req, res) { // Need sessions support to ensure that id was not directly entered by non-logged in user
-  console.log("User ID is " + req.params.user);
+  if (req.session) {
+    console.log("Session userID is " + req.session.userID);
+    console.log("User param is " + req.params.user);
+    if (req.session.userID != req.params.user) {
+      console.log("Security alert! Session userID does not match URL params userID, redirecting");
+      res.redirect('/');
+    }
+  }
+  else {
+    console.log("No session ID found, redirecting user to login page");
+    res.redirect('/');
+  }
+
+  //console.log("User ID is " + req.params.user);
   MongoClient.connect(url, function(err, db) {
     if (err) {
       res.status(501).end('Please try again in a short while');
@@ -164,18 +182,9 @@ app.get('/:user', function(req, res) { // Need sessions support to ensure that i
     }
     retrieveUserContracts(db, req.params.user, function(error, result) {
       if (error) throw error;
-      //console.log(result);
-      //res.send(result);
       console.log("Passed middleware");
-      //result.toArray().then(function(docs) {
-      //console.log("First document");
-      //if (docs) console.log(docs[0]);
-      //});
       if (result) console.log("Contract objects are ");
-      //console.log(result['contracts']);
-      //console.log(JSON.stringify(result));
       console.log(result);
-      //db.close();
       res.json(result);
       db.close();
     });

@@ -26,10 +26,6 @@
         <h2>Submit Contract</h2>
         <form action="/submit_contract" method="post">
             <div>
-                <label for="promiser">promiserId</label>
-                <input type="text" id="promiser" name="promiserId" />
-            </div>
-            <div>
                 <label for="promiser">promisedId</label>
                 <input type="text" id="promised" name="promisedId" />
             </div>
@@ -49,17 +45,8 @@
                 <button type="submit">Make a contract</button>
             </div>
         </form>
-        <div id="app">
 
         <div id="app">
-            {{ message }}
         </div>
-        <ul>
-            {% for author in authors %}
-            <li{% if loop.first %} class="first"{% endif %}>
-                [[ author ]]
-            </li>
-            {% endfor %}
-        </ul>
     </body>
 </html>
