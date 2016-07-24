@@ -25,7 +25,7 @@ app.use(session({ secret: process.env.FACEBOOK_APP_SECRET, cookie: { maxAge: 600
 
 if (app.get('env') === 'production') {
   app.set('trust proxy', 1) // trust first proxy 
-  session.cookie.secure = true // serve secure cookies 
+  if (session && session.cookie) session.cookie.secure = true; // serve secure cookies 
 }
 
 console.log('Client ID is ' + process.env.FACEBOOK_APP_ID);
