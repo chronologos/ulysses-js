@@ -3,7 +3,7 @@ var fs = require('fs');
 var path = require('path');
 var morgan = require('morgan'); // logger
 var swig = require('swig'); // templating engine
-require('dotenv').config(); // allow envvars to be stored in files
+//require('dotenv').config(); // allow envvars to be stored in files
 var bodyParser = require('body-parser'); // for post request req.body
 var mongoDB = require('mongodb');
 var MongoClient = mongoDB.MongoClient;
