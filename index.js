@@ -21,39 +21,37 @@ var accessLogStream = fs.createWriteStream(
 // setup the logger
 app.use(morgan('combined', {stream: accessLogStream}));
 
-app.use(session({ secret: process.env.FACEBOOK_APP_SECRET, cookie: { maxAge: 60000 }, resave: false, saveUninitialized: false}));
+app.use(session({secret: process.env.FACEBOOK_APP_SECRET, cookie: {maxAge: 60000}, resave: false, saveUninitialized: false}));
 
 if (app.get('env') === 'production') {
-  app.set('trust proxy', 1) // trust first proxy 
-  if (session && session.cookie) session.cookie.secure = true; // serve secure cookies 
+  app.set('trust proxy', 1); // trust first proxy
+  if (session && session.cookie) session.cookie.secure = true; // serve secure cookies
 }
 
 console.log('Client ID is ' + process.env.FACEBOOK_APP_ID);
 
 var passport = require('passport')
-  , FacebookStrategy = require('passport-facebook').Strategy;
+, FacebookStrategy = require('passport-facebook').Strategy;
 
 passport.use(new FacebookStrategy({
 
-    clientID: process.env.FACEBOOK_APP_ID,
-    clientSecret: process.env.FACEBOOK_APP_SECRET,
-    callbackURL: process.env.FB_CALLBACK_URL
-  },
-  function(accessToken, refreshToken, profile, done) {
-    console.log(accessToken);
-    console.log(refreshToken);
-    console.log(profile);
-  }
+  clientID: process.env.FACEBOOK_APP_ID,
+  clientSecret: process.env.FACEBOOK_APP_SECRET,
+  callbackURL: process.env.FB_CALLBACK_URL
+},
+function(accessToken, refreshToken, profile, done) {
+  console.log(accessToken);
+  console.log(refreshToken);
+  console.log(profile);
+}
 ));
-
-
 
 var port = process.env.PORT || 3000;
 var url;
 if (process.env.NODE_ENV === 'production') {
   url = process.env.MONGODB_URI;
 } else {
-   //url = 'mongodb://heroku_t776fjt0:q7iffsa51r7hd5lbev3ukmg021@ds027308.mlab.com:27308/heroku_t776fjt0';
+  // url = 'mongodb://heroku_t776fjt0:q7iffsa51r7hd5lbev3ukmg021@ds027308.mlab.com:27308/heroku_t776fjt0';
   url = 'mongodb://127.0.0.1:27017';
 }
 
@@ -77,12 +75,11 @@ checkExpiry();
 app.get('/', function(req, res) {
   console.log('index');
   res.render('index.html', {
-    pagename: 'Ulysses Contracts',
-    //authors: ['Paul', 'Jim', 'Jane']
+    pagename: 'Ulysses Contracts'
+      // authors: ['Paul', 'Jim', 'Jane']
 
   });
 });
-
 
 app.get('/auth/facebook', passport.authenticate('facebook'));
 
@@ -100,7 +97,7 @@ app.get('/auth/facebook/callback', function(req, res) {
   console.log("Received FB data from client");
   console.log(req.query);
   var userID = req.query.id; // id returned by facebook will be primary key for user in DB
-  //res.end(JSON.stringify(req.query, null, 2))
+  // res.end(JSON.stringify(req.query, null, 2))
   if (req.session) {
     req.session.userID = userID;
     console.log("Saved userID to session");
@@ -109,7 +106,7 @@ app.get('/auth/facebook/callback', function(req, res) {
     console.log("Session was not created");
     res.redirect('/');
   }
-  console.log("Redirecting logged-in user to his homepage"); 
+  console.log("Redirecting logged-in user to his homepage");
   res.redirect('/' + userID);
 });
 
@@ -124,12 +121,12 @@ app.post('/submit_contract', urlencodedParser, function(req, res) {
     console.log("Posting in progress, redirecting user to his home page");
     res.redirect("/" + req.session.userID);
     console.log("Session userID is " + req.session.userID);
-    var data = {//promiserId: req.body.promiserId,
-    promiserId: req.session.userID,
-    promisedId: req.body.promisedId,
-    contract: req.body.contract,
-    value: req.body.value,
-    expiry: req.body.expiry
+    var data = {// promiserId: req.body.promiserId,
+      promiserId: req.session.userID,
+      promisedId: req.body.promisedId,
+      contract: req.body.contract,
+      value: req.body.value,
+      expiry: req.body.expiry
     };
     console.log(data);
     MongoClient.connect(url, function(err, db) {
@@ -139,7 +136,7 @@ app.post('/submit_contract', urlencodedParser, function(req, res) {
       saveContractToUser(db, data, user);
     });
   }
-  //res.status(200).end();
+  // res.status(200).end();
 });
 
 app.get('/:user', function(req, res) { // Need sessions support to ensure that id was not directly entered by non-logged in user
@@ -182,59 +179,55 @@ app.get('/:user/zombies', function(req, res) {
   res.json(userExpiries);
 });
 
-
 /*
  * Save contract object to DB
  * Retrieve _id from DB
  * Push it onto user's contracts list
  */
 function saveContractToUser(db, contract, user) {
-  //contractsDB.insert(contract)
+  // contractsDB.insert(contract)
   var contractsDB = db.collection('contracts');
   var usersDB = db.collection('users');
   var contractID;
-  //contract.promiserId = user; // Set promiserID from req.session.userID
+  // contract.promiserId = user; // Set promiserID from req.session.userID
   contractsDB.insert(contract, function(err, result) {
     if (err) throw err;
     console.log(result);
     contractID = result['insertedIds'][0];
     console.log("ContractID is " + contractID);
-    usersDB.update({'userID':user}, {'$push':{'contracts':contractID}}, {'upsert' : true}, function(error, res) {
+    usersDB.update({'userID': user}, {'$push': {'contracts': contractID}}, {'upsert': true}, function(error, res) {
       if (error) throw error;
       console.log("Successfully appended " + contractID + " to user " + user);
       console.log(res);
       db.close();
     });
   });
-} 
+}
 
 app.listen(port, function() {
   console.log('Example app listening on port 3000!');
   console.log(process.env.NODE_ENV);
-})
-
+});
 
 function retrieveUserContracts(db, userID, next) {
   var usersDB = db.collection('users');
   var contractsDB = db.collection('contracts');
   // Try and replace with more efficient query that only retrieves the contracts field
-  usersDB.find({'userID':userID}, {fields:{'contracts':1}}, function(error , result) {
+  usersDB.find({'userID': userID}, {fields: {'contracts': 1}}, function(error, result) {
     if (!error) {
       result.limit(1).toArray().then(function(docs, err) { // Assumed that user identifier will be unique, but limit 1 just in case
         if (err) next(err, docs);
         console.log("Passing matching document :");
         console.log(docs[0]);
         getContracts(contractsDB, docs[0]['contracts'], next);
-        //getContracts(contractsDB, docs[0], next);
+        // getContracts(contractsDB, docs[0], next);
       });
     }
     else {
       next(error, result);
     }
   });
-
 }
-
 
 function getContracts(contractsDB, idsList, next) {
   var contractObjs = [];
@@ -244,9 +237,9 @@ function getContracts(contractsDB, idsList, next) {
     contractsDB.find(ObjectId(contractID)).toArray().then(function(docs, err) {
       if (err) {
         console.log("Alert! Failed to fetch contract no. " + (index + 1));
-        //continue;
+        // continue;
         return; // Go to next index of forEach
-      };
+      }
       console.log("Retrieved document for " + contractID);
       console.log(docs);
       contractObjs.push(docs[0]);
@@ -260,51 +253,49 @@ function getContracts(contractsDB, idsList, next) {
 function checkExpiry() {
   // Loop through contracts in db
   MongoClient.connect(url, function(err, db) {
-  	if (err) throw err;
-    //console.log("Watchdog connecting to DB");
+    if (err) throw err;
+    // console.log("Watchdog connecting to DB");
     var contractsDB = db.collection('contracts');
     contractsDB.find().toArray().then(function(docs, error) {
       if (error) {
         console.log("Watchdog unable to retrieve contracts");
         throw err;
       }
-      //console.log(docs);
+      // console.log(docs);
       var timeNow = new Date();
       var expiry;
-      
-      //console.log("Number of documents retrieved: " + docs.length);
+
+      // console.log("Number of documents retrieved: " + docs.length);
 
       docs.forEach(function(doc, index) {
         // Check expiry time against current time
         expiry = new Date(doc['expiry']);
         if (expiry <= timeNow) {
-          //console.log("PromiserId is " + doc['promiserId']);    
+          // console.log("PromiserId is " + doc['promiserId']);
           var oldList = _.get(zombies, doc['promiserId'], []);
           if (!hasContract(oldList, doc)) {
             oldList.push(doc);
           }
           _.set(zombies, doc['promiserId'], oldList);
           oldList = _.get(zombies, doc['promisedId'], []);
-          
+
           if (!hasContract(oldList, doc)) {
             oldList.push(doc);
-          } 
-          _.set(zombies, doc['promisedId'], oldList); 
+          }
+          _.set(zombies, doc['promisedId'], oldList);
         }
       });
-      //console.log(JSON.stringify(zombies));
-      //console.log("\n\n");
+      // console.log(JSON.stringify(zombies));
+      // console.log("\n\n");
       if (Object.keys(zombies).length > 0) {
-      	//console.log(JSON.stringify(zombies));
-      	//console.log("\n\n");
+        // console.log(JSON.stringify(zombies));
+        // console.log("\n\n");
       }
       db.close();
     });
-
-  }); 
+  });
   setTimeout(checkExpiry, INTERVAL);
 }
-
 
 function hasContract(contractsList, contract) {
   var contractStrs = contractsList.map(function(contract) {
