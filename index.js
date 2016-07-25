@@ -77,8 +77,8 @@ checkExpiry();
 app.get('/', function(req, res) {
   console.log('index');
   res.render('index.html', {
-    pagename: 'awesome people',
-    authors: ['Paul', 'Jim', 'Jane']
+    pagename: 'Ulysses Contracts',
+    //authors: ['Paul', 'Jim', 'Jane']
 
   });
 });
@@ -86,25 +86,14 @@ app.get('/', function(req, res) {
 
 app.get('/auth/facebook', passport.authenticate('facebook'));
 
-app.get('/contract/:contract', function(req, res) {
-  console.log(req.params);
-  MongoClient.connect(url, function(err, db) {
-    if (err) throw err;
-    // data = { promiserId: req.body.promiserId, promisedId: req.body.promisedId, contract: req.body.contract, value: req.body.value, expiry: req.body.expiry }
-    var data = {contract: req.params.contract};
-    console.log(data);
-    var ContractsDb = db.collection('contracts');
-    ContractsDb.find(data).toArray(function(err, result) {
-      if (err) throw err;
-      if (result) {
-        console.log(result);
-      } else {
-        console.log("not found");
-      }
-      db.close();
-      res.send(result); // todo use this to send redirect with string.
-    });
-  });
+app.get('/contracts', function(req, res) {
+  if (!req.session || !req.session.userID) {
+    console.log("GET request to contracts by non-signed in user, redirecting to index");
+    res.redirect('/');
+  }
+  else {
+    res.redirect('/' + req.session.userID);
+  }
 });
 
 app.get('/auth/facebook/callback', function(req, res) {
@@ -126,37 +115,31 @@ app.get('/auth/facebook/callback', function(req, res) {
 
 // should change to use req.userID using sessions OR by saving userID on client side after call to FB API and making button post to /:id/submit_contract
 app.post('/submit_contract', urlencodedParser, function(req, res) {
-  if (req.session) {
-    console.log("Session object is " + JSON.stringify(req.session));
-    console.log("Session userID is " + req.session.userID);
-    //if (req.session.userID != req.params.user) {
-    //  console.log("Security alert! Session userID does not match URL params userID, redirecting");
-    //  res.redirect('/');
-    //}
-  }
-  else {
+  if (!req.session || !req.session.userID) {
     console.log("No session ID found, redirecting user to login page");
     res.status(401).redirect('/');
   }
 
-
-  console.log("contract");
-  var data = {promiserId: req.body.promiserId,
+  else {
+    console.log("Posting in progress, redirecting user to his home page");
+    res.redirect("/" + req.session.userID);
+    console.log("Session userID is " + req.session.userID);
+    var data = {//promiserId: req.body.promiserId,
+    promiserId: req.session.userID,
     promisedId: req.body.promisedId,
     contract: req.body.contract,
     value: req.body.value,
     expiry: req.body.expiry
-  };
-  console.log(data);
-  MongoClient.connect(url, function(err, db) {
-    console.log("Connected correctly to server.");
-    assert.equal(null, err);
-    //var user = req.body.promiserId;
-    var user = req.session.userID;
-    //var usersDB = db.collection('users');
-    saveContractToUser(db, data, user);
-  });
-  res.status(200).end();
+    };
+    console.log(data);
+    MongoClient.connect(url, function(err, db) {
+      console.log("Connected correctly to server.");
+      assert.equal(null, err);
+      var user = req.session.userID;
+      saveContractToUser(db, data, user);
+    });
+  }
+  //res.status(200).end();
 });
 
 app.get('/:user', function(req, res) { // Need sessions support to ensure that id was not directly entered by non-logged in user
@@ -173,7 +156,6 @@ app.get('/:user', function(req, res) { // Need sessions support to ensure that i
     res.redirect('/');
   }
 
-  //console.log("User ID is " + req.params.user);
   MongoClient.connect(url, function(err, db) {
     if (err) {
       res.status(501).end('Please try again in a short while');
@@ -185,6 +167,7 @@ app.get('/:user', function(req, res) { // Need sessions support to ensure that i
       console.log("Passed middleware");
       if (result) console.log("Contract objects are ");
       console.log(result);
+      console.log("Sending json response");
       res.json(result);
       db.close();
     });
@@ -210,6 +193,7 @@ function saveContractToUser(db, contract, user) {
   var contractsDB = db.collection('contracts');
   var usersDB = db.collection('users');
   var contractID;
+  //contract.promiserId = user; // Set promiserID from req.session.userID
   contractsDB.insert(contract, function(err, result) {
     if (err) throw err;
     console.log(result);
@@ -294,7 +278,7 @@ function checkExpiry() {
         // Check expiry time against current time
         expiry = new Date(doc['expiry']);
         if (expiry <= timeNow) {
-          console.log("PromiserId is " + doc['promiserId']);    
+          //console.log("PromiserId is " + doc['promiserId']);    
           var oldList = _.get(zombies, doc['promiserId'], []);
           if (!hasContract(oldList, doc)) {
             oldList.push(doc);
@@ -311,8 +295,8 @@ function checkExpiry() {
       //console.log(JSON.stringify(zombies));
       //console.log("\n\n");
       if (Object.keys(zombies).length > 0) {
-      	console.log(JSON.stringify(zombies));
-      	console.log("\n\n");
+      	//console.log(JSON.stringify(zombies));
+      	//console.log("\n\n");
       }
       db.close();
     });

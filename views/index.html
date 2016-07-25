@@ -12,17 +12,8 @@
       <div id="status">
       </div>
         <h1>[[ pagename|title ]]</h1>
-        <h2>Retrieve Contract</h2>
-        <form action="/contract" method="get">
-            <div>
-                <label for="contract">Contract</label>
-                <input type="text" id="contract" name="contract" />
-            </div>
-            <div class="button">
-                <button type="submit">Look for this contract</button>
-            </div>
-        </form>
-
+        <h2>Retrieve Contracts</h2>        
+        <button><a href="/contracts" style="text-decoration:none;">My Contracts</a></button>
         <h2>Submit Contract</h2>
         <form action="/submit_contract" method="post">
             <div>
