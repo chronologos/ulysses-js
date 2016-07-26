@@ -65,6 +65,7 @@ app.engine('html', swig.renderFile);
 app.set('view engine', 'html');
 app.use(express.static('public')); // serve js and css
 var urlencodedParser = bodyParser.urlencoded({extended: false});
+var binaryParser = bodyParser.raw();
 var INTERVAL = 3000;
 
 // KIV - Maybe save to DB instead
@@ -92,7 +93,7 @@ app.get('/contracts', function(req, res) {
     res.redirect('/');
   }
   else {
-    res.redirect('/' + req.session.userID);
+    res.redirect('/users/' + req.session.userID);
   }
 });
 
@@ -110,7 +111,7 @@ app.get('/auth/facebook/callback', function(req, res) {
     res.redirect('/');
   }
   console.log("Redirecting logged-in user to his homepage"); 
-  res.redirect('/' + userID);
+  res.redirect('/users/' + userID);
 });
 
 // should change to use req.userID using sessions OR by saving userID on client side after call to FB API and making button post to /:id/submit_contract
@@ -142,7 +143,7 @@ app.post('/submit_contract', urlencodedParser, function(req, res) {
   //res.status(200).end();
 });
 
-app.get('/:user', function(req, res) { // Need sessions support to ensure that id was not directly entered by non-logged in user
+app.get('/users/:user', function(req, res) { // Need sessions support to ensure that id was not directly entered by non-logged in user
   if (req.session) {
     console.log("Session userID is " + req.session.userID);
     console.log("User param is " + req.params.user);
@@ -180,6 +181,76 @@ app.get('/:user/zombies', function(req, res) {
   // Send his expiries
   var userExpiries = zombies[req.params.user];
   res.json(userExpiries);
+});
+
+
+app.get('/imgUpload', function(req, res) {
+  res.sendFile(__dirname + '/views/imgUploadTest.html');
+});
+
+app.post('/uploadImg', function(req, res) {
+  if (!req.session.userID) {
+    console.log("Unauthorized attempt at image upload, redirecting to index");
+    res.redirect('/');
+  }
+  else {
+    console.log("Image being uploaded...");
+    var userID = req.session.userID;
+    console.log("UserID of image uploader is " + userID);
+    MongoClient.connect(url, function(err, db) {
+      if (err) {
+        //next(err, null);
+        res.sendStatus(501).end("Oops, something went wrong. Please try again!");
+      }
+      else {
+        // Call to function
+        console.log("Connected to DB, checking number of saved images for user");
+        getImageID(db, userID, function(error, result) {
+          var outputFile = result;
+          console.log("Piping image into output file");
+          //req.pipe(outputFile); Want only the body, not headers
+          console.log(JSON.stringify(req.headers));
+          req.on('data', function(chunk) {
+            outputFile.write(chunk, function() {
+              console.log("Chunk written!");
+              console.log("Chunk is " + chunk.toString());
+            });
+
+          });
+          
+          //console.log("Type of req " + typeof req);
+          //console.log("Req is " + JSON.stringify(req));
+          //var body = req.body;
+
+          //          console.log("Req is " + JSON.stringify(req));
+
+
+          //console.log("Body is " + typeof req.body);
+
+
+          //console.log("Field: " + typeof req.body.filename);
+                    
+
+          //console.log("Body keys: " + JSON.stringify(Object.keys(req.body)));
+          //console.log("Size of field: " + req.body.filename.length);
+          //console.log("Body: " + JSON.stringify(body));
+          /*
+          outputFile.write(body, function() {
+              console.log("Image written!");
+              outputFile.end();
+          });
+*/
+          req.on('end', function() {
+            console.log("Finished writing image to file!");
+            outputFile.end();
+            //res.status(200).end("Your image has been saved!");
+          });
+          res.status(200).end("Your image has been saved!");
+          db.close();
+        });
+      }
+    });
+  }
 });
 
 
@@ -311,4 +382,59 @@ function hasContract(contractsList, contract) {
     return contract._id.toString();
   });
   return contractStrs.indexOf(contract._id.toString()) !== -1;
+}
+
+
+function getImageID(db, userID, next) {
+    var usersDB = db.collection('users');
+    // Retrieve length of user's images list
+    usersDB.find({'userID':userID}, {fields:{'images':1}}, function(error, result) {
+      if (!error) {
+        result.limit(1).toArray().then(function(docs, otherErr) {
+          if (otherErr) next(otherErr, null);
+          console.log("Doc found for user in getImageID: " + JSON.stringify(docs));
+          var imageList = docs[0]['images'];
+          var outputFile;
+          if (imageList && imageList.length) { // User has some images already
+            outputFile = openImgFile(usersDB, userID, imageList.length);
+          }
+          else { // This is user's first image
+            console.log("This is user's first image");
+            outputFile = openImgFile(usersDB, userID, 0);
+          }
+          next(null, outputFile); // Start writing image to output file
+        });
+      }
+      else {
+        next(error, null); // Client will be sent 501 and has to retry
+      }
+    });
+}
+
+
+function openImgFile(usersDB, userID, numImages) {
+  var fileName = 'images/user-' + userID + '-image-' + numImages + '.jpg';
+  //var fileName = 'user-' + userID + '-image-' + numImages + '.jpg';
+  console.log("About to open write stream with name " + fileName);
+  //var imgFile = fs.createWriteStream(filename);
+  var imgFile = fs.createWriteStream(path.join(__dirname, fileName), {
+    flags: 'w',
+    defaultEncoding: 'utf8',
+    fd: null,
+    mode: 0o666,
+    autoClose: true
+  });
+  console.log("Type of outputFile: " + typeof imgFile);
+  //imgFile.end('TEST');
+  //saveImageToUser(usersDB, userID, filename); // Saving of filename to user's images in DB can happen in parallel with writing of image to file
+  return imgFile;
+}
+
+function saveImageToUser(usersDB, userID, imageFilePath) {
+  console.log("Trying to save imageFilePath to user");
+  usersDB.update({'userID':userID}, {'$push':{'images':imageFilePath}}, {'upsert' : true}, function(error, res) {
+    if (error) throw error;
+    console.log("Saved file path " + imageFilePath + " to user, response is " + res);
+  });
+  return;
 }
