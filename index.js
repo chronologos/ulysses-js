@@ -5,6 +5,7 @@ var morgan = require('morgan'); // logger
 var swig = require('swig'); // templating engine
 require('dotenv').config(); // allow envvars to be stored in files
 var bodyParser = require('body-parser'); // for post request req.body
+var multer = require('multer');
 var mongoDB = require('mongodb');
 var MongoClient = mongoDB.MongoClient;
 var ObjectId = mongoDB.ObjectID;
@@ -21,39 +22,37 @@ var accessLogStream = fs.createWriteStream(
 // setup the logger
 app.use(morgan('combined', {stream: accessLogStream}));
 
-app.use(session({ secret: process.env.FACEBOOK_APP_SECRET, cookie: { maxAge: 60000 }, resave: false, saveUninitialized: false}));
+app.use(session({secret: process.env.FACEBOOK_APP_SECRET, cookie: {maxAge: 60000}, resave: false, saveUninitialized: false}));
 
 if (app.get('env') === 'production') {
-  app.set('trust proxy', 1) // trust first proxy 
-  if (session && session.cookie) session.cookie.secure = true; // serve secure cookies 
+  app.set('trust proxy', 1); // trust first proxy
+  if (session && session.cookie) session.cookie.secure = true; // serve secure cookies
 }
 
 console.log('Client ID is ' + process.env.FACEBOOK_APP_ID);
 
 var passport = require('passport')
-  , FacebookStrategy = require('passport-facebook').Strategy;
+, FacebookStrategy = require('passport-facebook').Strategy;
 
 passport.use(new FacebookStrategy({
 
-    clientID: process.env.FACEBOOK_APP_ID,
-    clientSecret: process.env.FACEBOOK_APP_SECRET,
-    callbackURL: process.env.FB_CALLBACK_URL
-  },
-  function(accessToken, refreshToken, profile, done) {
-    console.log(accessToken);
-    console.log(refreshToken);
-    console.log(profile);
-  }
+  clientID: process.env.FACEBOOK_APP_ID,
+  clientSecret: process.env.FACEBOOK_APP_SECRET,
+  callbackURL: process.env.FB_CALLBACK_URL
+},
+function(accessToken, refreshToken, profile, done) {
+  console.log(accessToken);
+  console.log(refreshToken);
+  console.log(profile);
+}
 ));
-
-
 
 var port = process.env.PORT || 3000;
 var url;
 if (process.env.NODE_ENV === 'production') {
   url = process.env.MONGODB_URI;
 } else {
-   //url = 'mongodb://heroku_t776fjt0:q7iffsa51r7hd5lbev3ukmg021@ds027308.mlab.com:27308/heroku_t776fjt0';
+  // url = 'mongodb://heroku_t776fjt0:q7iffsa51r7hd5lbev3ukmg021@ds027308.mlab.com:27308/heroku_t776fjt0';
   url = 'mongodb://127.0.0.1:27017';
 }
 
@@ -65,7 +64,31 @@ app.engine('html', swig.renderFile);
 app.set('view engine', 'html');
 app.use(express.static('public')); // serve js and css
 var urlencodedParser = bodyParser.urlencoded({extended: false});
-var binaryParser = bodyParser.raw();
+//var imgParser = bodyParser({uploadDir:'/images/tmp.jpg', extended: true});
+//var binaryParser = bodyParser.raw();
+
+var storage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    cb(null, 'images')
+  },
+  filename: function (req, file, cb) {
+    cb(null, req.session.userID + '-' + Date.now() + '.jpg')
+  }
+});
+
+var checkLoggedIn = function(req, res, next) {
+  if (!req.session || !req.session.userID) {
+    console.log("User not logged in, middleware redirecting to index");
+    res.redirect('/');
+  }
+  else {
+    //next(req, res);
+    next();
+  }
+};
+
+var imgUpload = multer({ storage: storage });
+
 var INTERVAL = 3000;
 
 // KIV - Maybe save to DB instead
@@ -78,12 +101,11 @@ checkExpiry();
 app.get('/', function(req, res) {
   console.log('index');
   res.render('index.html', {
-    pagename: 'Ulysses Contracts',
-    //authors: ['Paul', 'Jim', 'Jane']
+    pagename: 'Ulysses Contracts'
+      // authors: ['Paul', 'Jim', 'Jane']
 
   });
 });
-
 
 app.get('/auth/facebook', passport.authenticate('facebook'));
 
@@ -101,7 +123,7 @@ app.get('/auth/facebook/callback', function(req, res) {
   console.log("Received FB data from client");
   console.log(req.query);
   var userID = req.query.id; // id returned by facebook will be primary key for user in DB
-  //res.end(JSON.stringify(req.query, null, 2))
+  // res.end(JSON.stringify(req.query, null, 2))
   if (req.session) {
     req.session.userID = userID;
     console.log("Saved userID to session");
@@ -123,14 +145,14 @@ app.post('/submit_contract', urlencodedParser, function(req, res) {
 
   else {
     console.log("Posting in progress, redirecting user to his home page");
-    res.redirect("/" + req.session.userID);
+    res.redirect("/users/" + req.session.userID);
     console.log("Session userID is " + req.session.userID);
-    var data = {//promiserId: req.body.promiserId,
-    promiserId: req.session.userID,
-    promisedId: req.body.promisedId,
-    contract: req.body.contract,
-    value: req.body.value,
-    expiry: req.body.expiry
+    var data = {// promiserId: req.body.promiserId,
+      promiserId: req.session.userID,
+      promisedId: req.body.promisedId,
+      contract: req.body.contract,
+      value: req.body.value,
+      expiry: req.body.expiry
     };
     console.log(data);
     MongoClient.connect(url, function(err, db) {
@@ -140,7 +162,7 @@ app.post('/submit_contract', urlencodedParser, function(req, res) {
       saveContractToUser(db, data, user);
     });
   }
-  //res.status(200).end();
+  // res.status(200).end();
 });
 
 app.get('/users/:user', function(req, res) { // Need sessions support to ensure that id was not directly entered by non-logged in user
@@ -175,8 +197,7 @@ app.get('/users/:user', function(req, res) { // Need sessions support to ensure 
   });
 });
 
-app.get('/:user/zombies', function(req, res) {
-  // TO-DO: Check that user is logged in
+app.get('/users/:user/zombies', checkLoggedIn, function(req, res) {
 
   // Send his expiries
   var userExpiries = zombies[req.params.user];
@@ -184,11 +205,11 @@ app.get('/:user/zombies', function(req, res) {
 });
 
 
-app.get('/imgUpload', function(req, res) {
+app.get('/imgUpload', checkLoggedIn, function(req, res) {
   res.sendFile(__dirname + '/views/imgUploadTest.html');
 });
 
-app.post('/uploadImg', function(req, res) {
+app.post('/uploadImg', checkLoggedIn, imgUpload.single('photo'), function(req, res) {
   if (!req.session.userID) {
     console.log("Unauthorized attempt at image upload, redirecting to index");
     res.redirect('/');
@@ -197,62 +218,47 @@ app.post('/uploadImg', function(req, res) {
     console.log("Image being uploaded...");
     var userID = req.session.userID;
     console.log("UserID of image uploader is " + userID);
+    console.log("Filename is " + req.file.filename);
     MongoClient.connect(url, function(err, db) {
-      if (err) {
-        //next(err, null);
-        res.sendStatus(501).end("Oops, something went wrong. Please try again!");
-      }
+      if (err) res.sendStatus(501).end("Oops, something went wrong. Please try again!");
       else {
-        // Call to function
-        console.log("Connected to DB, checking number of saved images for user");
-        getImageID(db, userID, function(error, result) {
-          var outputFile = result;
-          console.log("Piping image into output file");
-          //req.pipe(outputFile); Want only the body, not headers
-          console.log(JSON.stringify(req.headers));
-          req.on('data', function(chunk) {
-            outputFile.write(chunk, function() {
-              console.log("Chunk written!");
-              console.log("Chunk is " + chunk.toString());
-            });
-
-          });
-          
-          //console.log("Type of req " + typeof req);
-          //console.log("Req is " + JSON.stringify(req));
-          //var body = req.body;
-
-          //          console.log("Req is " + JSON.stringify(req));
-
-
-          //console.log("Body is " + typeof req.body);
-
-
-          //console.log("Field: " + typeof req.body.filename);
-                    
-
-          //console.log("Body keys: " + JSON.stringify(Object.keys(req.body)));
-          //console.log("Size of field: " + req.body.filename.length);
-          //console.log("Body: " + JSON.stringify(body));
-          /*
-          outputFile.write(body, function() {
-              console.log("Image written!");
-              outputFile.end();
-          });
-*/
-          req.on('end', function() {
-            console.log("Finished writing image to file!");
-            outputFile.end();
-            //res.status(200).end("Your image has been saved!");
-          });
-          res.status(200).end("Your image has been saved!");
+        var usersDB = db.collection('users');
+        saveImageToUser(usersDB, userID, req.file.filename, function() {
           db.close();
         });
       }
     });
+    res.status(200).end("Your image has been saved!"); // Respond to client before saving to DB for lower latency
   }
 });
 
+// TEMP, should integrate into contracts page
+app.get('/users/:user/images', checkLoggedIn, function(req, res) {
+  MongoClient.connect(url, function(err, db) {
+    if (err) res.sendStatus(501).end("Oops, something went wrong. Please try again!");
+    var usersDB = db.collection('users');
+    retrieveUserImages(usersDB, req.params.user, function(err, result) {
+      if (err) {
+        res.sendStatus(501).end("Please try again");
+        console.log("Error retrieving user's images: " + err);
+      }
+      else {
+        res.json(result);
+      }
+      db.close();
+    });
+  });
+});
+
+app.get('/images/:image', checkLoggedIn, function(req, res) {
+  res.sendFile(__dirname + "/images/" + req.params.image);
+});
+
+
+app.listen(port, function() {
+  console.log('Example app listening on port 3000!');
+  console.log(process.env.NODE_ENV);
+});
 
 /*
  * Save contract object to DB
@@ -260,52 +266,45 @@ app.post('/uploadImg', function(req, res) {
  * Push it onto user's contracts list
  */
 function saveContractToUser(db, contract, user) {
-  //contractsDB.insert(contract)
+  // contractsDB.insert(contract)
   var contractsDB = db.collection('contracts');
   var usersDB = db.collection('users');
   var contractID;
-  //contract.promiserId = user; // Set promiserID from req.session.userID
+  // contract.promiserId = user; // Set promiserID from req.session.userID
   contractsDB.insert(contract, function(err, result) {
     if (err) throw err;
     console.log(result);
     contractID = result['insertedIds'][0];
     console.log("ContractID is " + contractID);
-    usersDB.update({'userID':user}, {'$push':{'contracts':contractID}}, {'upsert' : true}, function(error, res) {
+    usersDB.update({'userID': user}, {'$push': {'contracts': contractID}}, {'upsert': true}, function(error, res) {
       if (error) throw error;
       console.log("Successfully appended " + contractID + " to user " + user);
       console.log(res);
       db.close();
     });
   });
-} 
-
-app.listen(port, function() {
-  console.log('Example app listening on port 3000!');
-  console.log(process.env.NODE_ENV);
-})
+}
 
 
 function retrieveUserContracts(db, userID, next) {
   var usersDB = db.collection('users');
   var contractsDB = db.collection('contracts');
   // Try and replace with more efficient query that only retrieves the contracts field
-  usersDB.find({'userID':userID}, {fields:{'contracts':1}}, function(error , result) {
+  usersDB.find({'userID': userID}, {fields: {'contracts': 1}}, function(error, result) {
     if (!error) {
       result.limit(1).toArray().then(function(docs, err) { // Assumed that user identifier will be unique, but limit 1 just in case
         if (err) next(err, docs);
         console.log("Passing matching document :");
         console.log(docs[0]);
         getContracts(contractsDB, docs[0]['contracts'], next);
-        //getContracts(contractsDB, docs[0], next);
+        // getContracts(contractsDB, docs[0], next);
       });
     }
     else {
       next(error, result);
     }
   });
-
 }
-
 
 function getContracts(contractsDB, idsList, next) {
   var contractObjs = [];
@@ -315,9 +314,9 @@ function getContracts(contractsDB, idsList, next) {
     contractsDB.find(ObjectId(contractID)).toArray().then(function(docs, err) {
       if (err) {
         console.log("Alert! Failed to fetch contract no. " + (index + 1));
-        //continue;
+        // continue;
         return; // Go to next index of forEach
-      };
+      }
       console.log("Retrieved document for " + contractID);
       console.log(docs);
       contractObjs.push(docs[0]);
@@ -331,51 +330,49 @@ function getContracts(contractsDB, idsList, next) {
 function checkExpiry() {
   // Loop through contracts in db
   MongoClient.connect(url, function(err, db) {
-  	if (err) throw err;
-    //console.log("Watchdog connecting to DB");
+    if (err) throw err;
+    // console.log("Watchdog connecting to DB");
     var contractsDB = db.collection('contracts');
     contractsDB.find().toArray().then(function(docs, error) {
       if (error) {
         console.log("Watchdog unable to retrieve contracts");
         throw err;
       }
-      //console.log(docs);
+      // console.log(docs);
       var timeNow = new Date();
       var expiry;
-      
-      //console.log("Number of documents retrieved: " + docs.length);
+
+      // console.log("Number of documents retrieved: " + docs.length);
 
       docs.forEach(function(doc, index) {
         // Check expiry time against current time
         expiry = new Date(doc['expiry']);
         if (expiry <= timeNow) {
-          //console.log("PromiserId is " + doc['promiserId']);    
+          // console.log("PromiserId is " + doc['promiserId']);
           var oldList = _.get(zombies, doc['promiserId'], []);
           if (!hasContract(oldList, doc)) {
             oldList.push(doc);
           }
           _.set(zombies, doc['promiserId'], oldList);
           oldList = _.get(zombies, doc['promisedId'], []);
-          
+
           if (!hasContract(oldList, doc)) {
             oldList.push(doc);
-          } 
-          _.set(zombies, doc['promisedId'], oldList); 
+          }
+          _.set(zombies, doc['promisedId'], oldList);
         }
       });
-      //console.log(JSON.stringify(zombies));
-      //console.log("\n\n");
+      // console.log(JSON.stringify(zombies));
+      // console.log("\n\n");
       if (Object.keys(zombies).length > 0) {
-      	//console.log(JSON.stringify(zombies));
-      	//console.log("\n\n");
+        // console.log(JSON.stringify(zombies));
+        // console.log("\n\n");
       }
       db.close();
     });
-
-  }); 
+  });
   setTimeout(checkExpiry, INTERVAL);
 }
-
 
 function hasContract(contractsList, contract) {
   var contractStrs = contractsList.map(function(contract) {
@@ -384,57 +381,31 @@ function hasContract(contractsList, contract) {
   return contractStrs.indexOf(contract._id.toString()) !== -1;
 }
 
-
-function getImageID(db, userID, next) {
-    var usersDB = db.collection('users');
-    // Retrieve length of user's images list
-    usersDB.find({'userID':userID}, {fields:{'images':1}}, function(error, result) {
-      if (!error) {
-        result.limit(1).toArray().then(function(docs, otherErr) {
-          if (otherErr) next(otherErr, null);
-          console.log("Doc found for user in getImageID: " + JSON.stringify(docs));
-          var imageList = docs[0]['images'];
-          var outputFile;
-          if (imageList && imageList.length) { // User has some images already
-            outputFile = openImgFile(usersDB, userID, imageList.length);
-          }
-          else { // This is user's first image
-            console.log("This is user's first image");
-            outputFile = openImgFile(usersDB, userID, 0);
-          }
-          next(null, outputFile); // Start writing image to output file
-        });
-      }
-      else {
-        next(error, null); // Client will be sent 501 and has to retry
-      }
-    });
-}
-
-
-function openImgFile(usersDB, userID, numImages) {
-  var fileName = 'images/user-' + userID + '-image-' + numImages + '.jpg';
-  //var fileName = 'user-' + userID + '-image-' + numImages + '.jpg';
-  console.log("About to open write stream with name " + fileName);
-  //var imgFile = fs.createWriteStream(filename);
-  var imgFile = fs.createWriteStream(path.join(__dirname, fileName), {
-    flags: 'w',
-    defaultEncoding: 'utf8',
-    fd: null,
-    mode: 0o666,
-    autoClose: true
-  });
-  console.log("Type of outputFile: " + typeof imgFile);
-  //imgFile.end('TEST');
-  //saveImageToUser(usersDB, userID, filename); // Saving of filename to user's images in DB can happen in parallel with writing of image to file
-  return imgFile;
-}
-
-function saveImageToUser(usersDB, userID, imageFilePath) {
+function saveImageToUser(usersDB, userID, imageFilePath, next) {
   console.log("Trying to save imageFilePath to user");
   usersDB.update({'userID':userID}, {'$push':{'images':imageFilePath}}, {'upsert' : true}, function(error, res) {
     if (error) throw error;
     console.log("Saved file path " + imageFilePath + " to user, response is " + res);
+    next();
   });
   return;
+}
+
+function retrieveUserImages(usersDB, userID, next) {
+  usersDB.find({'userID': userID}, {fields: {'images': 1}}, function(error, result) {
+    if (!error) {
+      result.limit(1).toArray().then(function(docs, err) { // Assumed that user identifier will be unique, but limit 1 just in case
+        if (err) next(err, null);
+        //console.log("Passing matching document :");
+        console.log(docs[0]);
+        console.log("Sending image paths: " + JSON.stringify(docs[0]['imags']));
+        next(null, docs[0]['images']);
+      });
+    }
+    else {
+      next(error, result);
+    }
+  });
+
+
 }
