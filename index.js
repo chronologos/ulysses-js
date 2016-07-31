@@ -232,12 +232,11 @@ app.post('/uploadImg', checkLoggedIn, imgUpload.single('photo'), function(req, r
   }
 });
 
-// TEMP, should integrate into contracts page
-app.get('/users/:user/images', checkLoggedIn, function(req, res) {
+app.get('/user/images', checkLoggedIn, function(req, res) {
   MongoClient.connect(url, function(err, db) {
     if (err) res.sendStatus(501).end("Oops, something went wrong. Please try again!");
     var usersDB = db.collection('users');
-    retrieveUserImages(usersDB, req.params.user, function(err, result) {
+    retrieveUserImages(usersDB, req.session.userID, function(err, result) {
       if (err) {
         res.sendStatus(501).end("Please try again");
         console.log("Error retrieving user's images: " + err);
@@ -254,6 +253,13 @@ app.get('/images/:image', checkLoggedIn, function(req, res) {
   res.sendFile(__dirname + "/images/" + req.params.image);
 });
 
+app.get('/userImages', checkLoggedIn, function(req, res) {
+  res.sendFile(__dirname + "/views/userImages.html");
+});
+
+app.get('/displayImages', checkLoggedIn, function(req, res) {
+  res.sendFile(__dirname + "/public/displayImages.js");
+});
 
 app.listen(port, function() {
   console.log('Example app listening on port 3000!');
