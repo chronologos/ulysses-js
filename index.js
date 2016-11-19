@@ -18,7 +18,7 @@ var app = express();
 // ========================
 // create a write stream (in append mode)
 var accessLogStream = fs.createWriteStream(
-    path.join(__dirname, 'access.log'), {flags: 'a'});
+  path.join(__dirname, 'access.log'), {flags: 'a'});
 // setup the logger
 app.use(morgan('combined', {stream: accessLogStream}));
 
@@ -32,7 +32,7 @@ if (app.get('env') === 'production') {
 console.log('Client ID is ' + process.env.FACEBOOK_APP_ID);
 
 var passport = require('passport')
-, FacebookStrategy = require('passport-facebook').Strategy;
+  , FacebookStrategy = require('passport-facebook').Strategy;
 
 passport.use(new FacebookStrategy({
 
@@ -40,11 +40,11 @@ passport.use(new FacebookStrategy({
   clientSecret: process.env.FACEBOOK_APP_SECRET,
   callbackURL: process.env.FB_CALLBACK_URL
 },
-function(accessToken, refreshToken, profile, done) {
-  console.log(accessToken);
-  console.log(refreshToken);
-  console.log(profile);
-}
+  function(accessToken, refreshToken, profile, done) {
+    console.log(accessToken);
+    console.log(refreshToken);
+    console.log(profile);
+  }
 ));
 
 var port = process.env.PORT || 3000;
@@ -102,7 +102,7 @@ app.get('/', function(req, res) {
   console.log('index');
   res.render('index.html', {
     pagename: 'Ulysses Contracts'
-      // authors: ['Paul', 'Jim', 'Jane']
+    // authors: ['Paul', 'Jim', 'Jane']
 
   });
 });
