@@ -147,9 +147,9 @@ app.post('/submit_contract', urlencodedParser, function(req, res) {
   }
 
   else {
-    // console.log("Posting in progress, redirecting user to his home page");
-    // res.redirect("/users/" + req.session.userID);
-    // console.log("Session userID is " + req.session.userID);
+    console.log("Posting in progress, redirecting user to his home page");
+    res.redirect("/users/" + req.session.userID);
+    console.log("Session userID is " + req.session.userID);
     var data = {// promiserId: req.body.promiserId,
       promiserId: req.session.userID,
       promisedId: req.body.promisedId,
@@ -164,10 +164,6 @@ app.post('/submit_contract', urlencodedParser, function(req, res) {
       assert.equal(null, err);
       var user = req.session.userID;
       saveContractToUser(db, data, user);
-      db.close()
-    });
-    res.render("createContract", {result: req.body.value}, function(err, html){
-      res.send(html);
     });
   }
   // res.status(200).end();
