@@ -345,8 +345,8 @@ function retrieveUserContracts(db, userID, next) {
     if (!error) {
       result.limit(1).toArray().then(function(docs, err) { // Assumed that user identifier will be unique, but limit 1 just in case
         if (err) {
-          console.log(err)
-          next(err, [])
+          console.log(err);
+          next(err, []);
         }
         console.log("Passing matching document :");
         console.log(docs[0]);
@@ -365,6 +365,7 @@ function getContracts(contractsDB, idsList, next) {
   var contractObjs = [];
   // console.log('IDs list has length ' + idsList.length);
   idsList.forEach(function(contractID, index) {
+    console.log(contractID);
     contractsDB.find(ObjectId(contractID)).toArray().then(function(docs, err) {
       if (err) {
         console.log("Alert! Failed to fetch contract no. " + (index + 1));
