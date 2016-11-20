@@ -365,13 +365,16 @@ function getContracts(contractsDB, idsList, next) {
   idsList.forEach(function(contractID, index) {
     console.log(contractID);
     //contractsDB.find(ObjectId(contractID)).toArray().then(function(docs, err) {
-    contractsDB.find(ObjectId(contractID)).toArray(function(err, results) {
+    //contractsDB.find(ObjectId(contractID)).toArray(function(err, results) {
+    //contractsDB.find(ObjectId(contractID))
+    contractsDB.find().toArray(function(err, results) {
       if (err) {
         console.log("Alert! Failed to fetch contract no. " + (index + 1));
         // continue;
         return; // Go to next index of forEach
       }
       var docs = results;
+      console.log("Results are " + docs);
       console.log("Retrieved document for " + contractID);
       console.log(docs);
       contractObjs.push(docs[0]);
@@ -381,8 +384,8 @@ function getContracts(contractsDB, idsList, next) {
         next(null, contractObjs);
       }
     });
+    console.log("Attempted no. " + index);
   });
-  console.log("Attempted no. " + index);
 }
 
 function checkExpiry() {
