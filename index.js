@@ -358,6 +358,7 @@ function retrieveUserContracts(db, userID, next) {
 }
 
 function getContracts(contractsDB, idsList, next) {
+  console.log("in getcontracts")
   var contractObjs = [];
   // console.log('IDs list has length ' + idsList.length);
   idsList.forEach(function(contractID, index) {
