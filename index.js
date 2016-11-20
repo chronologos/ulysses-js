@@ -14,7 +14,6 @@ var session = require('express-session'); // for grant
 var _ = require('lodash');
 var app = express();
 var HARDCODED_USER = "10153931907971748" // TODO(iantay) this is only for hackduke demo
-var HARDCODED_CONTRACT = "eat more chicken" // TODO(iantay) this is only for hackduke demo
 
 // Do logging with morgan
 // ========================
@@ -253,18 +252,25 @@ app.get('/user/images', checkLoggedIn, function(req, res) {
 
 // TODO(iantay) this is only for hackduke demo
 app.get('/internetbutton', function(req, res) {
+  var usersDB = db.collection('users');
   MongoClient.connect(url, function(err, db) {
-    if (err) res.sendStatus(501).end("Oops, something went wrong. Please try again!");
-    var usersDB = db.collection('users');
-    var contractsDB = db.collection('contracts');
-    contractsDB.update({promiserId: HARDCODED_USER, contract: HARDCODED_CONTRACT}, {$inc: {expiry: 1}}, function(err, result){
-      if (err) {
-        res.sendStatus(501).end("Please try again");
-      }
-      else {
-        res.json(result);
-      }
-    })
+  if (err) {
+    res.status(501).end('Please try again in a short while');
+    console.log("Error connecting to MongoDB");
+    throw err;
+  }
+  retrieveUserContracts(db, req.params.user, function(error, result) {
+    if (error) throw error;
+    var firstContract = result[0]
+    var expiry = parseInt(firstContract.expiry)
+    var uid = firstContract._id
+    expiry += 1
+    firstContract.expiry = expiry
+    result[0] = firstContract
+    usersDB.remove({_id: uid})
+    saveContractToUser(db, data, user);
+  });
+    res.json(result);
     db.close();
   });
 });
@@ -318,6 +324,8 @@ function retrieveUserContracts(db, userID, next) {
   // Try and replace with more efficient query that only retrieves the contracts field
   usersDB.find({'userID': userID}, {fields: {'contracts': 1}}, function(error, result) {
     if (!error) {
+      console.log("raw retrieveUserContracts result is:")
+      console.log(result)
       result.limit(1).toArray().then(function(docs, err) { // Assumed that user identifier will be unique, but limit 1 just in case
         if (err) next(err, docs);
         console.log("Passing matching document :");
