@@ -370,14 +370,15 @@ function getContracts(contractsDB, idsList, next) {
       console.log("Retrieved document for " + contractID);
       console.log(docs);
       contractObjs.push(docs[0]);
+      if (index == idsList.length - 1) {
+        console.log("getContracts done...");
+        next(null, contractObjs);
+      }
     });
   });
   console.log("getContracts done...");
   console.log(contractObjs);
-  if (index == idsList.length - 1) {
-    console.log("getContracts done...");
-    next(null, contractObjs);
-  }
+
 }
 
 function checkExpiry() {
