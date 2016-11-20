@@ -379,6 +379,8 @@ function getContracts(contractsDB, idsList, next) {
         next(null, contractObjs);
       }
     });
+    console.log("Attempted no. " + index);
+    
   });
 }
 
