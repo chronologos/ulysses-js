@@ -165,12 +165,16 @@ app.post('/submit_contract', urlencodedParser, function(req, res) {
       var user = req.session.userID;
       saveContractToUser(db, data, user);
     });
-    res.render("createContract", {value: req.body.value}, function(err, html){
-      res.send(html);
-    });
+    res.redirect("/contract/" + req.body.value);
   }
   // res.status(200).end();
 });
+
+app.get('/contract/:value', function(req, res){
+  res.render("createContract", {value: req.params.value}, function(err, html){
+      res.send(html);
+    });
+})
 
 // TODO(iantay) for testing use only
 // app.get('/users/'+HARDCODED_USER, function(req, res){
