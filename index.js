@@ -268,16 +268,14 @@ app.get('/internetbutton', function(req, res) {
       var uid = firstContract._id
       expiry += 1
       firstContract.expiry = expiry
-      contractsDB.replaceOne{{_id:uid}, {$set: firstContract}, function(err,r){
+      contractsDB.replaceOne({_id:uid}, {$set: firstContract}, function(err,r){
         if (err){
           res.sendStatus(501).end("internetbutton failed");
         }
         else{
           res.sendStatus(200)
         }
-      }}
-
-
+      });
     });
     db.close();
   });
