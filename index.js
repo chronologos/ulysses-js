@@ -267,6 +267,7 @@ app.get('/internetbutton', function(req, res) {
     retrieveUserContracts(db, HARDCODED_USER, function(error, result) {
         
       console.log("Returned from retrieveUserContracts");
+      var contractsDB = db.collection('contracts');
 
       if (error){
         console.log("IB: error in internetbutton");
