@@ -252,6 +252,7 @@ app.get('/user/images', checkLoggedIn, function(req, res) {
 
 // TODO(iantay) this is only for hackduke demo
 app.get('/internetbutton', function(req, res) {
+  console.log("internet button called")
   MongoClient.connect(url, function(err, db) {
     var usersDB = db.collection('users');
     var contractsDB = db.collection('contracts');
@@ -272,6 +273,7 @@ app.get('/internetbutton', function(req, res) {
           res.sendStatus(501).end("internetbutton failed");
         }
         else{
+          console.log("internet button done.")
           res.sendStatus(200)
         }
       });
@@ -329,8 +331,6 @@ function retrieveUserContracts(db, userID, next) {
   // Try and replace with more efficient query that only retrieves the contracts field
   usersDB.find({'userID': userID}, {fields: {'contracts': 1}}, function(error, result) {
     if (!error) {
-      console.log("raw retrieveUserContracts result is:")
-      console.log(result)
       result.limit(1).toArray().then(function(docs, err) { // Assumed that user identifier will be unique, but limit 1 just in case
         if (err) next(err, docs);
         console.log("Passing matching document :");
