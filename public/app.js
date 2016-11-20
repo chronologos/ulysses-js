@@ -42,13 +42,13 @@ window.fbAsyncInit = function() {
   FB.init({
     //appId      : '1703052213289749', // For Dev
     appId      : '1703044779957159', // For Production
-    cookie     : true,  // enable cookies to allow the server to access 
+    cookie     : true,  // enable cookies to allow the server to access
     // the session
     xfbml      : true,  // parse social plugins on this page
     version    : 'v2.5' // use graph api version 2.5
   });
 
-  // Now that we've initialized the JavaScript SDK, we call 
+  // Now that we've initialized the JavaScript SDK, we call
   // FB.getLoginStatus().  This function gets the state of the
   // person visiting this page and can return one of three states to
   // the callback you provide.  They can be:
@@ -83,7 +83,7 @@ function testAPI() {
     console.log('Successful login for: ' + response.name);
     console.log('Response data: ' + JSON.stringify(response));
     document.getElementById('status').innerHTML =
-      'Thanks for logging in, ' + response.name + '!';
+      'Logged in:' + response.name;
       $.ajax({
         url: '/auth/facebook/callback',
         data: response,
