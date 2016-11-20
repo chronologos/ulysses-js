@@ -157,7 +157,8 @@ app.post('/submit_contract', urlencodedParser, function(req, res) {
       promisedId: req.body.promisedId,
       contract: req.body.contract,
       value: req.body.value,
-      expiry: req.body.expiry
+      expiry: req.body.expiry,
+      submissionTime: Date.now()
     };
     console.log(data);
     MongoClient.connect(url, function(err, db) {
@@ -269,7 +270,7 @@ app.get('/user/images', checkLoggedIn, function(req, res) {
 });
 
 app.post('/internetbutton', urlencodedParser, function(req, res) {
-  res.send(200).end("success")
+  res.send(200).end("success");
 });
 
 // TODO(iantay) this is only for hackduke demo
@@ -283,32 +284,85 @@ app.get('/internetbutton', function(req, res) {
       throw err;
     }
     retrieveUserContracts(db, HARDCODED_USER, function(error, result) {
+        
+      console.log("Returned from retrieveUserContracts");
+      var contractsDB = db.collection('contracts'); // contractsDB was originally not defined
+
       if (error){
-        console.log("IB: error in internetbutton")
+        console.log("IB: error in internetbutton");
       }
       else {
-        console.log("IB: in callback after retrieveUserContracts")
-        console.log(result)
-        var firstContract = result[0]
-        var expiry = parseInt(firstContract.expiry)
-        var uid = firstContract._id
-        expiry += 1
-        firstContract.expiry = expiry
-        console.log(firstContract)
+        console.log("IB: in callback after retrieveUserContracts");
+        console.log(result);
+        var firstContract = result[0];
+        var expiry = parseInt(firstContract.expiry);
+        var uid = firstContract._id;
+        expiry += 1;
+        firstContract.expiry = expiry;
+        console.log(firstContract);
         contractsDB.replaceOne({_id:uid}, {$set: firstContract}, function(err,r){
           if (err){
             res.sendStatus(501).end("IB: internetbutton failed");
           }
           else{
-            console.log("IB: internet button done.")
-            res.sendStatus(200)
+            console.log("IB: internet button done.");
+            res.sendStatus(200);
           }
         });
       }
+      console.log("Closing DB Connection for retrieveUserContracts");
+      db.close();
     });
-    db.close();
+    //db.close(); THIS WAS THE BUG
   });
 });
+
+// TODO (Should be customized for device, based on /:device/failureStatus)
+app.get('/failureStatus', function(req, res) {
+  console.log("Received query to failureStatus");
+  // TEMP - use hardcoded user
+  MongoClient.connect(url, function(err, db) {
+    if (err) {
+      console.log("failureStatus unable to connect to db");
+      res.sendStatus(501).end("failureStatus endpoint failed")
+    }
+    else {
+      // Retrieve last button press of user from database, check if expired, urgent or neither
+      //var contractsDB = db.collection('contracts');
+      console.log("Retrieving user's contracts for failureStatus");
+      retrieveUserContracts(db, HARDCODED_USER, function(error, result) {
+        if (error) throw error;
+        console.log("Passed middleware");
+        if (result) console.log("Contract objects are ");
+        console.log(result);
+        var currentContract = result[result.length - 1];
+        console.log("Current contract of user: " + JSON.stringify(currentContract));
+        var expiryDate = currentContract['expiry'];
+        console.log("Expiry date is " + expiryDate);
+        var submissionDate = currentContract['submissionTime'];
+        var expiryDateObj =  new Date(expiryDate);
+        var budget = expiryDateObj - submissionDate;
+        var budgetLeft = expiryDateObj - Date.now();
+        var budgetPercentageLeft = 100 * (budgetLeft)/budget;
+        console.log("Percentage time left to expiry: " + budgetPercentageLeft + "%");
+        if (budgetLeft < 0) {
+          console.log("Expired!");
+          res.sendStatus(200).end("fail");
+        }
+        else if (budgetPercentageLeft < 10) {
+          console.log("Urgent!");
+          res.sendStatus(200).end("urgent");
+        }
+        else {
+          console.log("Still fine!");
+          res.sendStatus(200).end("You're good! "  + budgetPercentageLeft + "% left!");
+        }
+        db.close();
+      });
+    }
+
+  });
+}); 
 
 app.get('/images/:image', checkLoggedIn, function(req, res) {
   res.sendFile(__dirname + "/images/" + req.params.image);
@@ -383,11 +437,15 @@ function getContracts(contractsDB, idsList, next) {
   idsList.forEach(function(contractID, index) {
     console.log(contractID);
     contractsDB.find(ObjectId(contractID)).toArray().then(function(docs, err) {
+    //contractsDB.find(ObjectId(contractID)).toArray(function(err, results) {
+    //contractsDB.find().toArray(function(err, results) {
       if (err) {
         console.log("Alert! Failed to fetch contract no. " + (index + 1));
         // continue;
         return; // Go to next index of forEach
       }
+      //var docs = results;
+      console.log("Results are " + docs);
       console.log("Retrieved document for " + contractID);
       console.log(docs);
       contractObjs.push(docs[0]);
@@ -397,6 +455,7 @@ function getContracts(contractsDB, idsList, next) {
         next(null, contractObjs);
       }
     });
+    console.log("Attempted no. " + index);
   });
 }
 
