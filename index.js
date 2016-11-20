@@ -259,8 +259,6 @@ app.get('/internetbutton', function(req, res) {
   console.log("IB: internet button called")
   MongoClient.connect(url, function(err, db) {
     console.log("IB: connected to mongoclient")
-    var usersDB = db.collection('users');
-    var contractsDB = db.collection('contracts');
     if (err) {
       res.status(501).end('IB: Please try again in a short while');
       console.log("IB: Error connecting to MongoDB");
