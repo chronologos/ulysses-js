@@ -155,7 +155,7 @@ app.post('/submit_contract', urlencodedParser, function(req, res) {
       promisedId: req.body.promisedId,
       contract: req.body.contract,
       value: req.body.value,
-      expiry: moment(req.body.expiry + " " + req.body.expirytime),
+      expiry: moment(req.body.expiry + " " + req.body.expirytime).format("MM-DD-YY HH:mm:ss"),
       submissionTime: Date.now()
     };
     console.log(data);
