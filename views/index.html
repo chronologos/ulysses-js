@@ -28,10 +28,7 @@
       <li class="nav-item">
         <a class="dropdown-item" href="/contracts">My Contracts</a>
       </li>
-      <form class="form-inline float-xs-right">
-        <div id="status">
-        </div>
-      </form>
+
       <form class="form-inline float-xs-right">
         <fb:login-button scope="public_profile,email" onlogin="checkLoginState();" vertical-align="middle">
       </fb:login-button>
@@ -44,7 +41,8 @@
   <div class="jumbotron">
     <h1 class="display-3">Ulysses</h1>
     <p class="lead"> Ulysses contracts, otherwise known as self-binding contracts, are powerful tools for self-improvement. This is a quick implementation of trustless ulysses contracts. </p>
-
+    <div id="status">
+    </div>
 
   </div>
 
@@ -58,7 +56,7 @@
   <h3>Submit Contract</h3>
   <a name="makeContract"></a>
 
-  <form action="/submit_contract" method="post">
+  <form action="/submit_contract" method="post" id="contract_form">
     <div>
       <label for="promised" class="sr-only">promisedId</label>
       <input class="form-control" placeholder="Promise to" type="text" id="promised" name="promisedId" />
@@ -89,6 +87,18 @@
 <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-alpha.5/js/bootstrap.min.js" integrity="sha384-BLiI7JTZm+JWlgKa0M0kGRpJbF2J8q+qreVrKBC47e3K6BW78kGLrCkeRX6I9RoK" crossorigin="anonymous"></script>
 <script src="https://code.jquery.com/jquery-1.12.4.js"></script>
 <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
+<script>
+$('#contract_form').submit(function(event) {
+    event.preventDefault(); // Stops browser navigationg
+    var dataObject;
+    console.log(dataObject);
+    // build a json object, store in information to dataObject
+    $.post('/submit_contract', dataObject, function(res) {
+        consolel.log(res);
+        // on success execute this code
+    });
+});
+</script
 
 
 </body>

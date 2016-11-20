@@ -21,7 +21,6 @@
       <li class="nav-item">
         <a class="dropdown-item" href="/contracts">My Contracts</a>
       </li>
-    
       <form class="form-inline float-xs-right">
         <fb:login-button scope="public_profile,email" onlogin="checkLoginState();" vertical-align="middle">
       </fb:login-button>
@@ -31,16 +30,7 @@
 </nav>
 </br>
 <div class="container">
-  <div class="jumbotron">
-    {% for res in result %}
-    <ul{% if loop.first %} class="first list-group"{% else %} class="list-group"{% endif %}>
-    {% for item in res %}
-    <li class="list-group-item">[[ item ]]</li>
-    {% endfor %}
-  </ul>
-</br>
-{% endfor %}
-</div>
+  
 </div>
 
 
