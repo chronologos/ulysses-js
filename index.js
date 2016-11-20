@@ -153,7 +153,8 @@ app.post('/submit_contract', urlencodedParser, function(req, res) {
       promisedId: req.body.promisedId,
       contract: req.body.contract,
       value: req.body.value,
-      expiry: req.body.expiry
+      expiry: req.body.expiry,
+      submissionTime: Date.now()
     };
     console.log(data);
     MongoClient.connect(url, function(err, db) {
@@ -297,6 +298,53 @@ app.get('/internetbutton', function(req, res) {
     //db.close(); THIS WAS THE BUG
   });
 });
+
+// TODO (Should be customized for device, based on /:device/failureStatus)
+app.get('/failureStatus', function(req, res) {
+  console.log("Received query to failureStatus");
+  // TEMP - use hardcoded user
+  MongoClient.connect(url, function(err, db) {
+    if (err) {
+      console.log("failureStatus unable to connect to db");
+      res.sendStatus(501).end("failureStatus endpoint failed")
+    }
+    else {
+      // Retrieve last button press of user from database, check if expired, urgent or neither
+      //var contractsDB = db.collection('contracts');
+      console.log("Retrieving user's contracts for failureStatus");
+      retrieveUserContracts(db, HARDCODED_USER, function(error, result) {
+        if (error) throw error;
+        console.log("Passed middleware");
+        if (result) console.log("Contract objects are ");
+        console.log(result);
+        var currentContract = result[result.length - 1];
+        console.log("Current contract of user: " + JSON.stringify(currentContract));
+        var expiryDate = currentContract['expiry'];
+        console.log("Expiry date is " + expiryDate);
+        var submissionDate = currentContract['submissionTime'];
+        var expiryDateObj =  new Date(expiryDate);
+        var budget = expiryDateObj - submissionDate;
+        var budgetLeft = expiryDateObj - Date.now();
+        var budgetPercentageLeft = 100 * (budgetLeft)/budget;
+        console.log("Percentage time left to expiry: " + budgetPercentageLeft + "%");
+        if (budgetLeft < 0) {
+          console.log("Expired!");
+          res.sendStatus(200).end("fail");
+        }
+        else if (budgetPercentageLeft < 10) {
+          console.log("Urgent!");
+          res.sendStatus(200).end("urgent");
+        }
+        else {
+          console.log("Still fine!");
+          res.sendStatus(200).end("You're good! "  + budgetPercentageLeft + "% left!");
+        }
+        db.close();
+      });
+    }
+
+  });
+}); 
 
 app.get('/images/:image', checkLoggedIn, function(req, res) {
   res.sendFile(__dirname + "/images/" + req.params.image);
