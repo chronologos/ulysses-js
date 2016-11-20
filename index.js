@@ -373,6 +373,7 @@ function getContracts(contractsDB, idsList, next) {
     });
   });
   console.log("getContracts done...");
+  console.log(contractObjs);
   next(null, contractObjs);
 }
 
