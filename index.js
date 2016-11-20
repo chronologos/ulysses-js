@@ -365,7 +365,8 @@ app.get('/failureStatus', function(req, res) {
         else {
           console.log("Still fine!");
           //res.sendStatus(200).end("You're good! "  + budgetPercentageLeft + "% left!");
-          res.end("You're good! "  + budgetPercentageLeft + "% left!");
+          //res.end("You're good! "  + budgetPercentageLeft + "% left!");
+          res.end("good");
         }
         db.close();
       });
