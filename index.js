@@ -371,11 +371,12 @@ function getContracts(contractsDB, idsList, next) {
       // console.log("Retrieved document for " + contractID);
       // console.log(docs);
       contractObjs.push(docs[0]);
-      if (index == idsList.length - 1) {
-        next(null, contractObjs);
-      }
+
     });
   });
+  if (index == idsList.length - 1) {
+    next(null, contractObjs);
+  }
 }
 
 function checkExpiry() {
