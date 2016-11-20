@@ -6,6 +6,8 @@ var swig = require('swig'); // templating engine
 require('dotenv').config(); // allow envvars to be stored in files
 var bodyParser = require('body-parser'); // for post request req.body
 var multer = require('multer');
+var moment = require('moment');
+
 var mongoDB = require('mongodb');
 var MongoClient = mongoDB.MongoClient;
 var ObjectId = mongoDB.ObjectID;
@@ -153,7 +155,7 @@ app.post('/submit_contract', urlencodedParser, function(req, res) {
       promisedId: req.body.promisedId,
       contract: req.body.contract,
       value: req.body.value,
-      expiry: req.body.expiry + " " + req.body.expirytime,
+      expiry: moment(req.body.expiry + " " + req.body.expirytime),
       submissionTime: Date.now()
     };
     console.log(data);
