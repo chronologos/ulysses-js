@@ -252,10 +252,9 @@ app.get('/user/images', checkLoggedIn, function(req, res) {
 
 // TODO(iantay) this is only for hackduke demo
 app.get('/internetbutton', function(req, res) {
-  var usersDB = db.collection('users');
-  var contractsDB = db.collection('contracts');
-
   MongoClient.connect(url, function(err, db) {
+    var usersDB = db.collection('users');
+    var contractsDB = db.collection('contracts');
     if (err) {
       res.status(501).end('Please try again in a short while');
       console.log("Error connecting to MongoDB");
