@@ -13,6 +13,8 @@ var assert = require('assert');
 var session = require('express-session'); // for grant
 var _ = require('lodash');
 var app = express();
+var HARDCODED_USER = "10153931907971748" // TODO(iantay) this is only for hackduke demo
+var HARDCODED_CONTRACT = "eat more chicken" // TODO(iantay) this is only for hackduke demo
 
 // Do logging with morgan
 // ========================
@@ -132,7 +134,7 @@ app.get('/auth/facebook/callback', function(req, res) {
     console.log("Session was not created");
     res.redirect('/');
   }
-  console.log("Redirecting logged-in user to his homepage"); 
+  console.log("Redirecting logged-in user to his homepage");
   res.redirect('/users/' + userID);
 });
 
@@ -245,6 +247,19 @@ app.get('/user/images', checkLoggedIn, function(req, res) {
         res.json(result);
       }
       db.close();
+    });
+  });
+});
+
+// TODO(iantay) this is only for hackduke demo
+app.get('/internetbutton', function(req, res) {
+  MongoClient.connect(url, function(err, db) {
+    if (err) res.sendStatus(501).end("Oops, something went wrong. Please try again!");
+    var usersDB = db.collection('users');
+    var contractsDB = db.collection('contracts');
+    db.contractsDB.find({promiserId: HARDCODED_USER, contract: HARDCODED_CONTRACT})
+    db.contractsDB.update({promiserId: HARDCODED_USER, contract: HARDCODED_CONTRACT}, {$inc: {expiry: 1}})
+    db.close();
     });
   });
 });
