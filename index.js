@@ -368,7 +368,7 @@ function getContracts(contractsDB, idsList, next) {
         return; // Go to next index of forEach
       }
       console.log("Retrieved document for " + contractID);
-      // console.log(docs);
+      console.log(docs);
       contractObjs.push(docs[0]);
     });
   });
