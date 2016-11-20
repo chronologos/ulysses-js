@@ -372,13 +372,11 @@ function getContracts(contractsDB, idsList, next) {
       contractObjs.push(docs[0]);
       if (index == idsList.length - 1) {
         console.log("getContracts done...");
+        console.log(contractObjs);
         next(null, contractObjs);
       }
     });
   });
-  console.log("getContracts done...");
-  console.log(contractObjs);
-
 }
 
 function checkExpiry() {
