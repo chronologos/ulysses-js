@@ -16,7 +16,12 @@
   $( function() {
     $( "#datepicker" ).datepicker();
   } );
+  $(document).ready(function(){
+    $('input.timepicker').timepicker({});
+  });
   </script>
+  <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/timepicker/1.3.5/jquery.timepicker.min.css">
+
 </head>
 <body>
   <nav class="navbar navbar-light bg-faded">
@@ -74,6 +79,11 @@
       <input class="form-control" type="text" id="datepicker" placeholder="Expiry" name="expiry">
       <!-- <input class="form-control" placeholder="Expiry" type="text" id="expiry" name="expiry" /> -->
     </div>
+    <div>
+      <label for="expirytime" class="sr-only">expirytime</label>
+      <input class="form-control timepicker" type="text" placeholder="Time" name="expirytime">
+      <!-- <input class="form-control" placeholder="Expiry" type="text" id="expiry" name="expiry" /> -->
+    </div>
   </br>
   <div class="col-md-3">
     <button class="btn" type="submit">Make a contract!</button>
@@ -99,6 +109,8 @@ $('#contract_form').submit(function(event) {
     });
 });
 </script>
+<script src="//cdnjs.cloudflare.com/ajax/libs/timepicker/1.3.5/jquery.timepicker.min.js"></script>
+
 
 
 </body>
