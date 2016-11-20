@@ -343,15 +343,18 @@ app.get('/failureStatus', function(req, res) {
         console.log("Percentage time left to expiry: " + budgetPercentageLeft + "%");
         if (budgetLeft < 0) {
           console.log("Expired!");
-          res.sendStatus(200).end("fail");
+          //res.sendStatus(200).end("fail");
+          res.write("fail").end();
         }
         else if (budgetPercentageLeft < 10) {
           console.log("Urgent!");
-          res.sendStatus(200).end("urgent");
+          //res.sendStatus(200).end("urgent");
+          res.write("urgent").end();
         }
         else {
           console.log("Still fine!");
-          res.sendStatus(200).end("You're good! "  + budgetPercentageLeft + "% left!");
+          //res.sendStatus(200).end("You're good! "  + budgetPercentageLeft + "% left!");
+          res.write("You're good! "  + budgetPercentageLeft + "% left!").end();
         }
         db.close();
       });
