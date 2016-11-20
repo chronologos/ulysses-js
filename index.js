@@ -265,25 +265,28 @@ app.get('/internetbutton', function(req, res) {
       throw err;
     }
     retrieveUserContracts(db, HARDCODED_USER, function(error, result) {
+        
+      console.log("Returned from retrieveUserContracts");
+
       if (error){
-        console.log("IB: error in internetbutton")
+        console.log("IB: error in internetbutton");
       }
       else {
-        console.log("IB: in callback after retrieveUserContracts")
-        console.log(result)
-        var firstContract = result[0]
-        var expiry = parseInt(firstContract.expiry)
-        var uid = firstContract._id
-        expiry += 1
-        firstContract.expiry = expiry
-        console.log(firstContract)
+        console.log("IB: in callback after retrieveUserContracts");
+        console.log(result);
+        var firstContract = result[0];
+        var expiry = parseInt(firstContract.expiry);
+        var uid = firstContract._id;
+        expiry += 1;
+        firstContract.expiry = expiry;
+        console.log(firstContract);
         contractsDB.replaceOne({_id:uid}, {$set: firstContract}, function(err,r){
           if (err){
             res.sendStatus(501).end("IB: internetbutton failed");
           }
           else{
-            console.log("IB: internet button done.")
-            res.sendStatus(200)
+            console.log("IB: internet button done.");
+            res.sendStatus(200);
           }
         });
       }
