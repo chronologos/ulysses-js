@@ -267,7 +267,7 @@ app.get('/internetbutton', function(req, res) {
     retrieveUserContracts(db, HARDCODED_USER, function(error, result) {
         
       console.log("Returned from retrieveUserContracts");
-      var contractsDB = db.collection('contracts');
+      var contractsDB = db.collection('contracts'); // contractsDB was originally not defined
 
       if (error){
         console.log("IB: error in internetbutton");
@@ -294,7 +294,7 @@ app.get('/internetbutton', function(req, res) {
       console.log("Closing DB Connection for retrieveUserContracts");
       db.close();
     });
-    //db.close();
+    //db.close(); THIS WAS THE BUG
   });
 });
 
@@ -370,16 +370,15 @@ function getContracts(contractsDB, idsList, next) {
   // console.log('IDs list has length ' + idsList.length);
   idsList.forEach(function(contractID, index) {
     console.log(contractID);
-    //contractsDB.find(ObjectId(contractID)).toArray().then(function(docs, err) {
+    contractsDB.find(ObjectId(contractID)).toArray().then(function(docs, err) {
     //contractsDB.find(ObjectId(contractID)).toArray(function(err, results) {
-    //contractsDB.find(ObjectId(contractID))
-    contractsDB.find().toArray(function(err, results) {
+    //contractsDB.find().toArray(function(err, results) {
       if (err) {
         console.log("Alert! Failed to fetch contract no. " + (index + 1));
         // continue;
         return; // Go to next index of forEach
       }
-      var docs = results;
+      //var docs = results;
       console.log("Results are " + docs);
       console.log("Retrieved document for " + contractID);
       console.log(docs);
