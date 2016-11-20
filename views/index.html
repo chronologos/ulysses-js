@@ -63,27 +63,29 @@
 
   <form action="/submit_contract" method="post" id="contract_form">
     <div>
-      <label for="promised" class="sr-only">promisedId</label>
-      <input class="form-control" placeholder="Promise to" type="text" id="promised" name="promisedId" />
-    </div>
-    <div>
       <label for="contract" class="sr-only">contract</label>
-      <input class="form-control" placeholder="Contract Description" type="text" id="contract" name="contract" />
+      <input class="form-control" placeholder=" Describe the contract:" type="text" id="contract" name="contract" />
     </div>
     <div>
       <label for="value" class="sr-only">value</label>
-      <input class="form-control" placeholder="Dollar Value" type="text" id="value" name="value" />
+      <input class="form-control" placeholder="How much is this worth?" type="text" id="value" name="value" />
     </div>
     <div>
       <label for="expiry" class="sr-only">expiry</label>
-      <input class="form-control" type="text" id="datepicker" placeholder="Expiry" name="expiry">
+      <input class="form-control" type="text" id="datepicker" placeholder="Expiry date" name="expiry">
       <!-- <input class="form-control" placeholder="Expiry" type="text" id="expiry" name="expiry" /> -->
     </div>
     <div>
       <label for="expirytime" class="sr-only">expirytime</label>
-      <input class="form-control timepicker" type="text" placeholder="Time" name="expirytime">
+      <input class="form-control timepicker" type="text" placeholder="Expiry Time" name="expirytime">
       <!-- <input class="form-control" placeholder="Expiry" type="text" id="expiry" name="expiry" /> -->
     </div>
+    <div>
+      <label for="frequency" class="sr-only">expirytime</label>
+      <input class="form-control" type="text" placeholder="1 every 7 days" name="frequency">
+      <!-- <input class="form-control" placeholder="Expiry" type="text" id="expiry" name="expiry" /> -->
+    </div>
+
   </br>
   <div class="col-md-3">
     <button class="btn" type="submit">Make a contract!</button>
