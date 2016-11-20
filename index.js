@@ -344,7 +344,10 @@ function retrieveUserContracts(db, userID, next) {
   usersDB.find({'userID': userID}, {fields: {'contracts': 1}}, function(error, result) {
     if (!error) {
       result.limit(1).toArray().then(function(docs, err) { // Assumed that user identifier will be unique, but limit 1 just in case
-        if (err) next(err, docs);
+        if (err) {
+          console.log(err)
+          next(err, [])
+        }
         console.log("Passing matching document :");
         console.log(docs[0]);
         getContracts(contractsDB, docs[0]['contracts'], next);
