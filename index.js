@@ -252,7 +252,7 @@ app.get('/user/images', checkLoggedIn, function(req, res) {
 
 app.post('/internetbutton', urlencodedParser, function(req, res) {
   res.send(200).end("success")
-}
+});
 
 // TODO(iantay) this is only for hackduke demo
 app.get('/internetbutton', function(req, res) {
