@@ -147,8 +147,8 @@ app.post('/submit_contract', urlencodedParser, function(req, res) {
   }
 
   else {
-    console.log("Posting in progress, redirecting user to his home page");
-    res.redirect("/users/" + req.session.userID);
+    // console.log("Posting in progress, redirecting user to his home page");
+    // res.redirect("/users/" + req.session.userID);
     console.log("Session userID is " + req.session.userID);
     var expiryObj = moment(req.body.expiry + " " + req.body.expirytime);
     expiryObj.add(5, "hours");
