@@ -164,6 +164,10 @@ app.post('/submit_contract', urlencodedParser, function(req, res) {
       assert.equal(null, err);
       var user = req.session.userID;
       saveContractToUser(db, data, user);
+      db.close()
+    });
+    res.render("createContract", {result: req.body.value}, function(err, html){
+      res.send(html);
     });
   }
   // res.status(200).end();
