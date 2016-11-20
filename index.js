@@ -111,13 +111,17 @@ app.get('/', function(req, res) {
 app.get('/auth/facebook', passport.authenticate('facebook'));
 
 app.get('/contracts', function(req, res) {
-  if (!req.session || !req.session.userID) {
-    console.log("GET request to contracts by non-signed in user, redirecting to index");
-    res.redirect('/');
+  if (process.env.NODE_ENV == 'development'){
+    res.redirect('/users/' + HARDCODED_USER);
   }
-  else {
-    res.redirect('/users/' + req.session.userID);
-  }
+// }
+//   if (!req.session || !req.session.userID) {
+//     console.log("GET request to contracts by non-signed in user, redirecting to index");
+//     res.redirect('/');
+//   }
+//   else {
+//     res.redirect('/users/' + req.session.userID);
+//   }
 });
 
 app.get('/auth/facebook/callback', function(req, res) {
@@ -166,6 +170,16 @@ app.post('/submit_contract', urlencodedParser, function(req, res) {
   // res.status(200).end();
 });
 
+// TODO(iantay) for testing use only
+// app.get('/users/'+HARDCODED_USER, function(req, res){
+//   console.log("yay");
+//   var result = [{ _id: '5830a102d4b05400114ef0bd', promiserId: '10153931907971748', contract: 'eat more pizza', promisedId: 'adithya', value: '10', expiry: '0' },  { _id: '58310e8573384e0011d9cf42', promiserId: '10153931907971748', contract: 'eat more chicken', promisedId: 'stud-dithya', value: '1', expiry: '0' } ];
+//   res.render("mycontracts", {result: parseContractList(result)}, function(err, html){
+//     res.send(html);
+//   });
+// });
+
+
 app.get('/users/:user', function(req, res) { // Need sessions support to ensure that id was not directly entered by non-logged in user
   if (req.session) {
     console.log("Session userID is " + req.session.userID);
@@ -189,10 +203,14 @@ app.get('/users/:user', function(req, res) { // Need sessions support to ensure 
     retrieveUserContracts(db, req.params.user, function(error, result) {
       if (error) throw error;
       console.log("Passed middleware");
-      if (result) console.log("Contract objects are ");
-      console.log(result);
-      console.log("Sending json response");
-      res.json(result);
+      if (result) {
+        console.log("Contract objects are ");
+        console.log(result);
+      }
+
+      res.render("mycontracts", {result: parseContractList(result)}, function(err, html){
+        res.send(html);
+      });
       db.close();
     });
   });
@@ -200,14 +218,14 @@ app.get('/users/:user', function(req, res) { // Need sessions support to ensure 
 
 app.get('/users/:user/zombies', checkLoggedIn, function(req, res) {
 
-  // Send his expiries
-  var userExpiries = zombies[req.params.user];
-  res.json(userExpiries);
+// Send his expiries
+var userExpiries = zombies[req.params.user];
+res.json(userExpiries);
 });
 
 
 app.get('/imgUpload', checkLoggedIn, function(req, res) {
-  res.sendFile(__dirname + '/views/imgUploadTest.html');
+res.sendFile(__dirname + '/views/imgUploadTest.html');
 });
 
 app.post('/uploadImg', checkLoggedIn, imgUpload.single('photo'), function(req, res) {
@@ -461,6 +479,19 @@ function retrieveUserImages(usersDB, userID, next) {
       next(error, result);
     }
   });
+}
 
-
+function parseContractList(contractList) {
+  var res = [];
+  for (var i = 0; i < contractList.length; i++) {
+    console.log(contractList[i]);
+    delete contractList[i]._id;
+    delete contractList[i].promiserId;
+    contractList[i]['contract'] = "Contract: " + contractList[i]['contract'];
+    contractList[i]['promisedId'] = "Promised To: " + contractList[i]['promisedId'];
+    contractList[i]['value'] = "Contract Value: " + contractList[i]['value'];
+    contractList[i]['expiry'] = "Expiry Date: " + contractList[i]['expiry'];
+    res.push(contractList[i]);
+  }
+  return res;
 }
