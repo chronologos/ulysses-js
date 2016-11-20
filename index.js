@@ -111,17 +111,13 @@ app.get('/', function(req, res) {
 app.get('/auth/facebook', passport.authenticate('facebook'));
 
 app.get('/contracts', function(req, res) {
-  if (process.env.NODE_ENV == 'development'){
-    res.redirect('/users/' + HARDCODED_USER);
+  if (!req.session || !req.session.userID) {
+    console.log("GET request to contracts by non-signed in user, redirecting to index");
+    res.redirect('/');
   }
-// }
-//   if (!req.session || !req.session.userID) {
-//     console.log("GET request to contracts by non-signed in user, redirecting to index");
-//     res.redirect('/');
-//   }
-//   else {
-//     res.redirect('/users/' + req.session.userID);
-//   }
+  else {
+    res.redirect('/users/' + req.session.userID);
+  }
 });
 
 app.get('/auth/facebook/callback', function(req, res) {
@@ -208,7 +204,7 @@ app.get('/users/:user', function(req, res) { // Need sessions support to ensure 
         console.log("Contract objects are ");
         console.log(result);
       }
-
+      // render contract list server-side and push to client
       res.render("mycontracts", {result: parseContractList(result)}, function(err, html){
         res.send(html);
       });
@@ -284,7 +280,7 @@ app.get('/internetbutton', function(req, res) {
       throw err;
     }
     retrieveUserContracts(db, HARDCODED_USER, function(error, result) {
-        
+
       console.log("Returned from retrieveUserContracts");
       var contractsDB = db.collection('contracts'); // contractsDB was originally not defined
 
@@ -362,7 +358,7 @@ app.get('/failureStatus', function(req, res) {
     }
 
   });
-}); 
+});
 
 app.get('/images/:image', checkLoggedIn, function(req, res) {
   res.sendFile(__dirname + "/images/" + req.params.image);
