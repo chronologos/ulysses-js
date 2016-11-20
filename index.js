@@ -260,7 +260,6 @@ app.get('/internetbutton', function(req, res) {
     db.contractsDB.find({promiserId: HARDCODED_USER, contract: HARDCODED_CONTRACT})
     db.contractsDB.update({promiserId: HARDCODED_USER, contract: HARDCODED_CONTRACT}, {$inc: {expiry: 1}})
     db.close();
-    });
   });
 });
 
