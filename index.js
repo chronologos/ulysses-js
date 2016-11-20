@@ -344,17 +344,17 @@ app.get('/failureStatus', function(req, res) {
         if (budgetLeft < 0) {
           console.log("Expired!");
           //res.sendStatus(200).end("fail");
-          res.write("fail").end();
+          res.end("fail");
         }
         else if (budgetPercentageLeft < 10) {
           console.log("Urgent!");
           //res.sendStatus(200).end("urgent");
-          res.write("urgent").end();
+          res.end("urgent");
         }
         else {
           console.log("Still fine!");
           //res.sendStatus(200).end("You're good! "  + budgetPercentageLeft + "% left!");
-          res.write("You're good! "  + budgetPercentageLeft + "% left!").end();
+          res.end("You're good! "  + budgetPercentageLeft + "% left!");
         }
         db.close();
       });
