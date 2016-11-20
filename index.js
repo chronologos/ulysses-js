@@ -20,27 +20,27 @@ var HARDCODED_USER = "10153931907971748" // TODO(iantay) this is only for hackdu
 // create a write stream (in append mode)
 var accessLogStream = fs.createWriteStream(
   path.join(__dirname, 'access.log'), {flags: 'a'});
-// setup the logger
-app.use(morgan('combined', {stream: accessLogStream}));
+  // setup the logger
+  app.use(morgan('combined', {stream: accessLogStream}));
 
-app.use(session({secret: process.env.FACEBOOK_APP_SECRET, cookie: {maxAge: 60000}, resave: false, saveUninitialized: false}));
+  app.use(session({secret: process.env.FACEBOOK_APP_SECRET, cookie: {maxAge: 60000}, resave: false, saveUninitialized: false}));
 
-if (app.get('env') === 'production') {
-  app.set('trust proxy', 1); // trust first proxy
-  if (session && session.cookie) session.cookie.secure = true; // serve secure cookies
-}
+  if (app.get('env') === 'production') {
+    app.set('trust proxy', 1); // trust first proxy
+    if (session && session.cookie) session.cookie.secure = true; // serve secure cookies
+  }
 
-console.log('Client ID is ' + process.env.FACEBOOK_APP_ID);
+  console.log('Client ID is ' + process.env.FACEBOOK_APP_ID);
 
-var passport = require('passport')
+  var passport = require('passport')
   , FacebookStrategy = require('passport-facebook').Strategy;
 
-passport.use(new FacebookStrategy({
+  passport.use(new FacebookStrategy({
 
-  clientID: process.env.FACEBOOK_APP_ID,
-  clientSecret: process.env.FACEBOOK_APP_SECRET,
-  callbackURL: process.env.FB_CALLBACK_URL
-},
+    clientID: process.env.FACEBOOK_APP_ID,
+    clientSecret: process.env.FACEBOOK_APP_SECRET,
+    callbackURL: process.env.FB_CALLBACK_URL
+  },
   function(accessToken, refreshToken, profile, done) {
     console.log(accessToken);
     console.log(refreshToken);
@@ -263,20 +263,23 @@ app.get('/internetbutton', function(req, res) {
     }
     retrieveUserContracts(db, req.params.user, function(error, result) {
       if (error) throw error;
-      var firstContract = result[0]
-      var expiry = parseInt(firstContract.expiry)
-      var uid = firstContract._id
-      expiry += 1
-      firstContract.expiry = expiry
-      contractsDB.replaceOne({_id:uid}, {$set: firstContract}, function(err,r){
-        if (err){
-          res.sendStatus(501).end("internetbutton failed");
-        }
-        else{
-          console.log("internet button done.")
-          res.sendStatus(200)
-        }
-      });
+      else{
+        var firstContract = result[0]
+        var expiry = parseInt(firstContract.expiry)
+        var uid = firstContract._id
+        expiry += 1
+        firstContract.expiry = expiry
+        console.log(firstContract)
+        contractsDB.replaceOne({_id:uid}, {$set: firstContract}, function(err,r){
+          if (err){
+            res.sendStatus(501).end("internetbutton failed");
+          }
+          else{
+            console.log("internet button done.")
+            res.sendStatus(200)
+          }
+        });
+      }
     });
     db.close();
   });
@@ -300,10 +303,10 @@ app.listen(port, function() {
 });
 
 /*
- * Save contract object to DB
- * Retrieve _id from DB
- * Push it onto user's contracts list
- */
+* Save contract object to DB
+* Retrieve _id from DB
+* Push it onto user's contracts list
+*/
 function saveContractToUser(db, contract, user) {
   // contractsDB.insert(contract)
   var contractsDB = db.collection('contracts');
@@ -347,17 +350,17 @@ function retrieveUserContracts(db, userID, next) {
 
 function getContracts(contractsDB, idsList, next) {
   var contractObjs = [];
-  console.log('IDs list has length ' + idsList.length);
+  // console.log('IDs list has length ' + idsList.length);
   idsList.forEach(function(contractID, index) {
     console.log("Getting contracts with list");
     contractsDB.find(ObjectId(contractID)).toArray().then(function(docs, err) {
       if (err) {
-        console.log("Alert! Failed to fetch contract no. " + (index + 1));
+        // console.log("Alert! Failed to fetch contract no. " + (index + 1));
         // continue;
         return; // Go to next index of forEach
       }
-      console.log("Retrieved document for " + contractID);
-      console.log(docs);
+      // console.log("Retrieved document for " + contractID);
+      // console.log(docs);
       contractObjs.push(docs[0]);
       if (index == idsList.length - 1) {
         next(null, contractObjs);
