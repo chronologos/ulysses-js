@@ -352,7 +352,7 @@ function retrieveUserContracts(db, userID, next) {
       });
     }
     else {
-      next(error, result);
+      res.sendStatus(501);
     }
   });
 }
@@ -361,7 +361,6 @@ function getContracts(contractsDB, idsList, next) {
   var contractObjs = [];
   // console.log('IDs list has length ' + idsList.length);
   idsList.forEach(function(contractID, index) {
-    console.log("Getting contracts with list");
     contractsDB.find(ObjectId(contractID)).toArray().then(function(docs, err) {
       if (err) {
         // console.log("Alert! Failed to fetch contract no. " + (index + 1));
@@ -375,6 +374,7 @@ function getContracts(contractsDB, idsList, next) {
     });
   });
   if (index == idsList.length - 1) {
+    console.log("getContracts done...");
     next(null, contractObjs);
   }
 }
