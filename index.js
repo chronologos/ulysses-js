@@ -256,20 +256,23 @@ app.post('/internetbutton', urlencodedParser, function(req, res) {
 
 // TODO(iantay) this is only for hackduke demo
 app.get('/internetbutton', function(req, res) {
-  console.log("internet button called")
+  console.log("IB: internet button called")
   MongoClient.connect(url, function(err, db) {
-    console.log("connected to mongoclient")
+    console.log("IB: connected to mongoclient")
     var usersDB = db.collection('users');
     var contractsDB = db.collection('contracts');
     if (err) {
-      res.status(501).end('Please try again in a short while');
-      console.log("Error connecting to MongoDB");
+      res.status(501).end('IB: Please try again in a short while');
+      console.log("IB: Error connecting to MongoDB");
       throw err;
     }
     retrieveUserContracts(db, req.params.user, function(error, result) {
-      if (error) throw error;
-      else{
-        console.log("in callback after retrieveUserContracts")
+      if (error){
+        console.log("IB: error in internetbutton")
+      }
+      else {
+        console.log("IB: in callback after retrieveUserContracts")
+        console.log(result)
         var firstContract = result[0]
         var expiry = parseInt(firstContract.expiry)
         var uid = firstContract._id
@@ -278,10 +281,10 @@ app.get('/internetbutton', function(req, res) {
         console.log(firstContract)
         contractsDB.replaceOne({_id:uid}, {$set: firstContract}, function(err,r){
           if (err){
-            res.sendStatus(501).end("internetbutton failed");
+            res.sendStatus(501).end("IB: internetbutton failed");
           }
           else{
-            console.log("internet button done.")
+            console.log("IB: internet button done.")
             res.sendStatus(200)
           }
         });
