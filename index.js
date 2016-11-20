@@ -257,7 +257,14 @@ app.get('/internetbutton', function(req, res) {
     if (err) res.sendStatus(501).end("Oops, something went wrong. Please try again!");
     var usersDB = db.collection('users');
     var contractsDB = db.collection('contracts');
-    contractsDB.update({promiserId: HARDCODED_USER, contract: HARDCODED_CONTRACT}, {$inc: {expiry: 1}})
+    contractsDB.update({promiserId: HARDCODED_USER, contract: HARDCODED_CONTRACT}, {$inc: {expiry: 1}}, function(err, result){
+      if (err) {
+        res.sendStatus(501).end("Please try again");
+      }
+      else {
+        res.json(result);
+      }
+    })
     db.close();
   });
 });
