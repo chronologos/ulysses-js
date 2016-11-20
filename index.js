@@ -266,7 +266,7 @@ app.get('/internetbutton', function(req, res) {
       console.log("IB: Error connecting to MongoDB");
       throw err;
     }
-    retrieveUserContracts(db, req.params.user, function(error, result) {
+    retrieveUserContracts(db, HARDCODED_USER, function(error, result) {
       if (error){
         console.log("IB: error in internetbutton")
       }
