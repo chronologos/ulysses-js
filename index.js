@@ -258,6 +258,7 @@ app.post('/internetbutton', urlencodedParser, function(req, res) {
 app.get('/internetbutton', function(req, res) {
   console.log("internet button called")
   MongoClient.connect(url, function(err, db) {
+    console.log("connected to mongoclient")
     var usersDB = db.collection('users');
     var contractsDB = db.collection('contracts');
     if (err) {
@@ -268,6 +269,7 @@ app.get('/internetbutton', function(req, res) {
     retrieveUserContracts(db, req.params.user, function(error, result) {
       if (error) throw error;
       else{
+        console.log("in callback after retrieveUserContracts")
         var firstContract = result[0]
         var expiry = parseInt(firstContract.expiry)
         var uid = firstContract._id
